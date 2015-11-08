@@ -1,6 +1,6 @@
 package ru.osslabs.modules.report.stages;
 
-import ru.osslabs.modules.report.Report;
+import ru.osslabs.modules.report.types.Report;
 
 /**
  * Created by ikuchmin on 02.11.15.

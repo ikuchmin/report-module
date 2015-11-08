@@ -8,5 +8,41 @@
     <artifactId>report</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+    </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.comsoft.juniprint</groupId>
+            <artifactId>juniprint</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.jooq</groupId>-->
+            <!--<artifactId>jool</artifactId>-->
+            <!--<version>0.9.7</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>io.github.amaembo</groupId>
+            <artifactId>streamex</artifactId>
+            <version>0.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.javaslang</groupId>
+            <artifactId>javaslang</artifactId>
+            <version>2.0.0-beta</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+        </dependency>
+    </dependencies>
 </project>

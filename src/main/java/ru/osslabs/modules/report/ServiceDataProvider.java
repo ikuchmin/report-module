@@ -3,10 +3,9 @@ package ru.osslabs.modules.report;
 import ru.osslabs.modules.report.domain.Service;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.functions.Transformer;
+import ru.osslabs.modules.report.types.Report;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -35,15 +34,15 @@ public class ServiceDataProvider {
     }
 
     public static Transformer<Report, Stream<Service>, Stream<Service>> addCommonSubService() {
-        return (data, report) ->
+        return (report, data) ->
                 data.map(service -> service.addSubService("Общая подуслуга"));
     }
 
-    public static Transformer<Report, Stream<Service>, Integer> addCommonSubService2() {
-        return (data) ->
-                data.map(service -> service.addSubService("Общая подуслуга"));
-    }
-}
+
+//    public static Engine<Report, Stream<Object>, JasperPrint> jasperPrintJavaBeansEngine() {
+//        return JasperFillManager.fillReport()
+//
+//    }
 //    public static Collection<Service> fromDB() {
 //        return null;
 //    }
