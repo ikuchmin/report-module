@@ -3,6 +3,7 @@ package ru.osslabs.modules.report.functions;
 /**
  * Created by ikuchmin on 06.11.15.
  */
+@FunctionalInterface
 public interface Consumer3<T, U, A> {
     /**
      * Performs this operation on the given arguments.

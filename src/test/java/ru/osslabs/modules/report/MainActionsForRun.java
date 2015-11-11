@@ -4,16 +4,21 @@ import javaslang.collection.Stream;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.junit.Test;
-import ru.osslabs.modules.report.engines.JUniPrintEngine;
-import ru.osslabs.modules.report.fetchers.MockDataFetchers;
-import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
-import ru.osslabs.modules.report.types.JUniPrintReport;
+import ru.osslabs.modules.report.decorators.BetweenDateReport;
+import ru.osslabs.modules.report.decorators.DestinationPathReport;
+import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
+import ru.osslabs.modules.report.impls.sed.SEDDDunaevReportFactory;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.OffsetDateTime;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 //import org.jooq.lambda.Seq;
 //import java.util.stream.Stream;
@@ -23,31 +28,31 @@ import java.nio.file.StandardOpenOption;
  */
 public class MainActionsForRun {
 
-    @Test
-    public void jUniPrintReportProcess() {
-        Path templatePath = Paths.get("template1.xlt");
-        Double multiplier = 10.0;
-        try (InputStream templateStream = new BufferedInputStream(Files.newInputStream(templatePath, StandardOpenOption.READ))) {
-            HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(templateStream));
-            new ReportBuilder<>(new JUniPrintReport(workbook, workbook.getName("DataBeg")))
-                    .compose(MockDataFetchers.matrixFiveOnTwentyFive())
-                    .transform((report, composableData) -> Matrix.of(composableData)
-                            .matrixMap((row, col, el) -> el * multiplier))
-                    .transform(HSSFWorkbookTransformers.fromMatrix())
-                    .compile(JUniPrintEngine.jUniPrintEngineFactory())
-                    .publish((report, compiledReport) -> {
-                        try (OutputStream outputStream = new BufferedOutputStream(
-                                Files.newOutputStream(Paths.get("template.compiled.xls")))) {
-                            compiledReport.write(outputStream);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        return "template.compiled.xls";
-                    });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    @Test
+//    public void jUniPrintReportProcess() {
+//        Path templatePath = Paths.get("template1.xlt");
+//        Double multiplier = 10.0;
+//        try (InputStream templateStream = new BufferedInputStream(Files.newInputStream(templatePath, StandardOpenOption.READ))) {
+//            HSSFWorkbook workbook = new HSSFWorkbook(new POIFSFileSystem(templateStream));
+//            new ReportBuilder<>(new JUniPrintReport(workbook, workbook.getName("DataBeg")))
+//                    .compose(MockDataFetchers.matrixFiveOnTwentyFive())
+//                    .transform((report, composableData) -> Matrix.of(composableData)
+//                            .matrixMap((row, col, el) -> el * multiplier))
+//                    .transform(HSSFWorkbookTransformer::new)
+//                    .compile(JUniPrintEngine.jUniPrintEngineFactory())
+//                    .publish((report, compiledReport) -> {
+//                        try (OutputStream outputStream = new BufferedOutputStream(
+//                                Files.newOutputStream(Paths.get("template.compiled.xls")))) {
+//                            compiledReport.write(outputStream);
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                        return "template.compiled.xls";
+//                    });
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Test
     public void testJOOL() throws Exception {
@@ -73,4 +78,44 @@ public class MainActionsForRun {
 
 
     }
+
+    class SEDDunaevReport implements BetweenDateReport, DestinationPathReport, SourceFututeHSSFWorkBookReport {
+        @Override
+        public OffsetDateTime getFirstDate() {
+            return null;
+        }
+
+        @Override
+        public OffsetDateTime getLastDate() {
+            return null;
+        }
+
+        @Override
+        public Path getDestination() {
+            return Paths.get("template1.compiled.xls");
+        }
+
+        @Override
+        public Future<HSSFWorkbook> getHSSFWorkbookFuture() {
+            return Executors.newSingleThreadExecutor().submit(() -> {
+                Path templatePath = Paths.get("template1.xlt");
+                try (InputStream templateStream = new BufferedInputStream(Files.newInputStream(templatePath, StandardOpenOption.READ))) {
+                    return new HSSFWorkbook(new POIFSFileSystem(templateStream));
+                } catch (IOException io) {
+                    throw new RuntimeException(io);
+                }
+            });
+        }
+
+        @Override
+        public String getDataBagCellName() {
+            return "DataBeg";
+        }
+    }
+
+//    @Test
+//    public void testSEDDDunaevReportFactory() throws Exception {
+//        System.out.println(new SEDDDunaevReportFactory<SEDDunaevReport>().runReport(ExportType.xls, new SEDDunaevReport()));
+//
+//    }
 }
