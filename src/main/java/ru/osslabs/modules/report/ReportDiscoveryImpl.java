@@ -37,7 +37,7 @@ public class ReportDiscoveryImpl implements ReportsDataProvider, ReportDiscovery
 //    @Inject
 //    private SEDDDunaevReportWrapper dunaevReportWrapper;
 
-    static final String REPORT_DIR = "/reports/juniprint/";
+//    static final String REPORT_DIR = "/reports/juniprint/";
 
     private Map<Path, ReportWrapper> reportWrappers;
 
@@ -72,12 +72,7 @@ public class ReportDiscoveryImpl implements ReportsDataProvider, ReportDiscovery
     @Override
     public void runReport(String reportPath, ExportType exportType, OutputStream outputStream, Map<String, Object> map) {
         ReportWrapper reportWrapper = reportWrappers.get(Paths.get(reportPath));
-        reportWrapper.runReport(exportType,
-                new SEDDDunaevReport(
-                        () -> this.getClass().getClassLoader().getResourceAsStream(reportWrapper.getReportPath().toString()),
-                        outputStream
-                ),
-                Void.class);
+        reportWrapper.runReport(exportType, outputStream, Void.class);
     }
 
     @Override

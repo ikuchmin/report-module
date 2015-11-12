@@ -60,6 +60,16 @@ public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> 
         return reportFactory.runReport(type, report, expectedResult);
     }
 
+    @Override
+    public <R> R runReport(ExportType type, OutputStream outputStream /*TODO: Избавиться от прямого указания типа выходного параметра*/, Class<R> expectedResult) {
+        runReport(type,
+                new SEDDDunaevReport(
+                        () -> this.getClass().getClassLoader().getResourceAsStream(getReportPath().toString()),
+                        outputStream
+                ),
+                Void.class);
+    }
+
 //    @Override
 //    public void runReport(String reportPath, ExportType exportType, OutputStream outputStream, Map<String, Object> parameters) {
 //        reportFactory.runReport(exportType, reportPOJOBuilder.build(parameters));
