@@ -7,6 +7,7 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,10 +33,6 @@ public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> 
 //    EntityManager entityManager;
 
     @Override
-    public Set<ExportType> getExportTypes() {
-        return reportFactory.getExportTypes();
-    }
-
     public String getReportCode() {
         return reportFactory.getReportCode();
     }
@@ -51,8 +48,13 @@ public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> 
     }
 
     @Override
-    public Set<ReportParameter> getReportParams() {
-        return null;
+    public Collection<ReportParameter> getReportParams() {
+        return reportFactory.getReportParams();
+    }
+
+    @Override
+    public Collection<ExportType> getExportTypes() {
+        return reportFactory.getExportTypes();
     }
 
     @Override
@@ -62,12 +64,12 @@ public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> 
 
     @Override
     public <R> R runReport(ExportType type, OutputStream outputStream /*TODO: Избавиться от прямого указания типа выходного параметра*/, Class<R> expectedResult) {
-        runReport(type,
+        return runReport(type,
                 new SEDDDunaevReport(
                         () -> this.getClass().getClassLoader().getResourceAsStream(getReportPath().toString()),
                         outputStream
                 ),
-                Void.class);
+                expectedResult);
     }
 
 //    @Override

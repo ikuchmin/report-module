@@ -1,5 +1,6 @@
 package ru.osslabs.modules.report.impls.sed;
 
+import javaslang.Tuple2;
 import ru.osslabs.modules.report.*;
 import ru.osslabs.modules.report.decorators.BetweenDateReport;
 import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
@@ -7,21 +8,23 @@ import ru.osslabs.modules.report.decorators.DestinationPathReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.engines.JUniPrintEngine;
 import ru.osslabs.modules.report.fetchers.MockDataFetchers;
+import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.publishers.HSSFWorkBookFileStorePublisher;
 import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
 
+import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.DependsOn;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static javax.ejb.ConcurrencyManagementType.BEAN;
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
@@ -45,11 +48,19 @@ import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 @ReportFactoryAnnotation
 public class SEDDDunaevReportFactory<T extends BetweenDateReport & DestinationPathReport & DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T> {
 
+    // Добавить Qualifier
+    @Inject
+    private Fetcher<BetweenDateReport, Stream<Tuple2<String, Integer>>> sedDataFetcher;
+
     private final Map<RunnerKey, Function<T, ?>> runners;
     private final Double multiplier = 100.0;
 
     public SEDDDunaevReportFactory() {
         runners = new HashMap<>();
+    }
+
+    @PostConstruct
+    public void init() {
         runners.put(new RunnerKey(ExportType.xls, Path.class),
                 (report) -> new ReportBuilder<>(report)
                         .compose(MockDataFetchers::matrixFiveOnTwentyFive)
@@ -60,10 +71,8 @@ public class SEDDDunaevReportFactory<T extends BetweenDateReport & DestinationPa
                         .publish(HSSFWorkBookFileStorePublisher::writeToFileStore));
         runners.put(new RunnerKey(ExportType.xls, Void.class),
                 (report) -> new ReportBuilder<>(report)
-                        .compose(MockDataFetchers::matrixFiveOnTwentyFive)
-                        .transform((re, data) -> Matrix.of(data)
-                                .matrixMap((row, col, el) -> el * multiplier))
-                        .transform(HSSFWorkbookTransformers::fromMatrixToHSSFWorkbook)
+                        .compose(sedDataFetcher)
+                        .transform(HSSFWorkbookTransformers::fromStreamTuplesToHSSFWorkbook)
                         .compile(JUniPrintEngine::compile)
                         .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream));
     }
@@ -75,16 +84,23 @@ public class SEDDDunaevReportFactory<T extends BetweenDateReport & DestinationPa
 
     @Override
     public Path getReportPath() {
-        return Paths.get("/reports/juniprint/template1.xlt");
+        return Paths.get("/reports/juniprint/sedreport.xlt");
     }
 
     @Override
-    public String getReportName() { return "Тестовый отчет"; }
+    public String getReportName() { return "Отчет по документообороту"; }
 
     @Override
-    public Set<ExportType> getExportTypes() {
+    public Collection<ExportType> getExportTypes() {
         return runners.keySet()
                 .stream().map((run) -> run.getExportType()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Collection<ReportParameter> getReportParams() {
+        return Arrays.asList(
+                new ReportParameter("beginDate", "Дата начала диапазона", String.class),
+                new ReportParameter("endDate", "Дата окончания диапазона", String.class));
     }
 
 

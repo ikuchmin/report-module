@@ -8,6 +8,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -33,7 +34,9 @@ public interface ReportFactory<T> {
      */
     String getReportName();
 
-    Set<ExportType> getExportTypes();
+    Collection<ExportType> getExportTypes();
+
+    Collection<ReportParameter> getReportParams();
 
     // Выполняется деспетчеризация на основе формата вызываемого отчета и предполагаемого результата
     <R> R runReport(ExportType type, T report, Class<R> expectedResult);
