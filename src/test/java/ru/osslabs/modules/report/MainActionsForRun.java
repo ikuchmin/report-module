@@ -1,5 +1,6 @@
 package ru.osslabs.modules.report;
 
+import javaslang.Function2;
 import javaslang.collection.Stream;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -17,8 +18,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 //import org.jooq.lambda.Seq;
 //import java.util.stream.Stream;
@@ -54,20 +62,20 @@ public class MainActionsForRun {
 //        }
 //    }
 
-    @Test
-    public void testJOOL() throws Exception {
-        Short a = 12;
-        Stream<Stream<Double>> str = Stream.of(
-                Stream.of(1.0, 2.0, 3.0, 4.0),
-                Stream.of(1.0, 2.0, 3.0, 4.0),
-                Stream.of(1.0, 2.0, 3.0, 4.0),
-                Stream.of(1.0, 2.0, 3.0, 4.0));
-
-        str.map(s1 -> s1.zip(Stream.gen(1, i -> i + 1)))
-                .zip(Stream.gen(1, i -> i + 1))
-                .forEach(coll ->
-                        coll._1.forEach(elem ->
-                                System.out.print(elem._2 + " - " + coll._2 + " - " + elem._1 + "\n")));
+//    @Test
+//    public void testJOOL() throws Exception {
+//        Short a = 12;
+//        Stream<Stream<Double>> str = Stream.of(
+//                Stream.of(1.0, 2.0, 3.0, 4.0),
+//                Stream.of(1.0, 2.0, 3.0, 4.0),
+//                Stream.of(1.0, 2.0, 3.0, 4.0),
+//                Stream.of(1.0, 2.0, 3.0, 4.0));
+//
+//        str.map(s1 -> s1.zip(Stream.gen(1, i -> i + 1)))
+//                .zip(Stream.gen(1, i -> i + 1))
+//                .forEach(coll ->
+//                        coll._1.forEach(elem ->
+//                                System.out.print(elem._2 + " - " + coll._2 + " - " + elem._1 + "\n")));
 //        str.zipAll(Stream.gen(1, i -> i + 1), str.get(0), 100).forEach(System.out::println);
 //        str.flatMap((el, el2) -> )
 
@@ -77,7 +85,7 @@ public class MainActionsForRun {
 //        Stream.generate(() -> new Random().nextDouble()).findFirst().ifPresent(System.out::println);
 
 
-    }
+//    }
 
     class SEDDunaevReport implements BetweenDateReport, DestinationPathReport, SourceFututeHSSFWorkBookReport {
         @Override
@@ -113,9 +121,27 @@ public class MainActionsForRun {
         }
     }
 
-//    @Test
+//        @Test
 //    public void testSEDDDunaevReportFactory() throws Exception {
 //        System.out.println(new SEDDDunaevReportFactory<SEDDunaevReport>().runReport(ExportType.xls, new SEDDunaevReport()));
 //
 //    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, R, E> R funResolve(Function<T, R> fn, E arg) {
+        return fn.apply((T) arg);
+    }
+
+    @Test
+    public <T1 extends String,
+            T2 extends Integer> void testUnTypeInType() throws Exception {
+        Map<Integer, Function<?, ?>> functionMap = new HashMap<>();
+
+        Function<T1, ?> fn1 = p -> p.concat("World");
+        Function<T2, ?> fn2 = p -> p.intValue() + 12;
+        functionMap.put(1, fn1);
+        functionMap.put(2, fn2);
+        System.out.println(functionMap.get(1).apply("dsfadsf"));
+        System.out.println(funResolve(functionMap.get(2), 12));
+    }
 }

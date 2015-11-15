@@ -19,6 +19,10 @@ public class ReportUtils {
         return res;
     }
 
+    public static <T> T objectNotNull(Supplier<T> main, Supplier<T> def) {
+        return objectNotNull((mainRes) -> mainRes == null, main, def);
+    }
+
     /**
      * Попробовать переопределить Supplier через Function
      * @param initValue
@@ -41,9 +45,5 @@ public class ReportUtils {
 
     public static <T, R> R objectNotNull(T initValue, Function<T, R> main, Function<T, R> def) {
         return objectNotNull(initValue, (mainRes) -> mainRes == null, main, def);
-    }
-
-    public static <T> T objectNotNull(Supplier<T> main, Supplier<T> def) {
-        return objectNotNull((mainRes) -> mainRes == null, main, def);
     }
 }

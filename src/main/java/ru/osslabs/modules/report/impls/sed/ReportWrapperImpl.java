@@ -1,6 +1,7 @@
 package ru.osslabs.modules.report.impls.sed;
 
 import ru.osslabs.modules.report.*;
+import ru.osslabs.modules.report.types.Report;
 
 import javax.ejb.*;
 import javax.enterprise.context.Dependent;
@@ -22,9 +23,9 @@ import static javax.ejb.ConcurrencyManagementType.BEAN;
 @DependsOn("ReportDiscoveryImpl")
 @Dependent
 @ReportWrapperAnnotation
-public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> {
+public class ReportWrapperImpl<T extends Report> implements ReportWrapper<T> {
     @Inject // Use qualifier for separate implementation
-    ReportFactory<SEDDDunaevReport> reportFactory;
+    ReportFactory reportFactory;
 
 //    @Inject  // Use qualifier for separate implementation
 //    ReportPOJOBuilder<SEDDDunaevReport> reportPOJOBuilder;
@@ -58,18 +59,19 @@ public class SEDDDunaevReportWrapper implements ReportWrapper<SEDDDunaevReport> 
     }
 
     @Override
-    public <R> R runReport(ExportType type, SEDDDunaevReport report, Class<R> expectedResult) {
+    public <R> R runReport(ExportType type, T report, Class<R> expectedResult) {
         return reportFactory.runReport(type, report, expectedResult);
     }
 
     @Override
     public <R> R runReport(ExportType type, OutputStream outputStream /*TODO: Избавиться от прямого указания типа выходного параметра*/, Class<R> expectedResult) {
-        return runReport(type,
-                new SEDDDunaevReport(
-                        () -> this.getClass().getClassLoader().getResourceAsStream(getReportPath().toString()),
-                        outputStream
-                ),
-                expectedResult);
+        return null;
+//        return runReport(type,
+//                new SEDDDunaevReport(
+//                        () -> this.getClass().getClassLoader().getResourceAsStream(getReportPath().toString()),
+//                        outputStream
+//                ),
+//                expectedResult);
     }
 
 //    @Override
