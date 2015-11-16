@@ -12,13 +12,13 @@ import java.util.logging.Logger;
  */
 
 @Interceptor
-@ReportFactoryAnnotation(discovery = ReportDiscoveryImpl.class)
+@ReportFactoryAnnotation(discovery = ReportRegistryImpl.class)
 public class ReportFactoryInterceptor {
     @Inject
     private Logger log;
 
     @Inject // Use qualifier for separate implementation
-    private ReportDiscovery reportDiscovery;
+    private ReportRegistry reportRegistry;
 
     /**
      * Используется для создания врапера и регистрации его в Discovery

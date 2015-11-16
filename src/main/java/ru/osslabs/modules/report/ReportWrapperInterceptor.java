@@ -12,13 +12,13 @@ import java.util.logging.Logger;
  */
 
 @Interceptor
-@ReportWrapperAnnotation(discovery = ReportDiscoveryImpl.class)
+@ReportWrapperAnnotation(discovery = ReportRegistryImpl.class)
 public class ReportWrapperInterceptor {
     @Inject
     private Logger log;
 
     @Inject // Use qualifier for separate implementation
-    private ReportDiscovery reportDiscovery;
+    private ReportRegistry reportRegistry;
 
     /**
      * Используется для создания врапера и регистрации его в Discovery
@@ -30,7 +30,7 @@ public class ReportWrapperInterceptor {
      */
     @PostConstruct
     public void register(InvocationContext ic) throws Exception {
-        reportDiscovery.registerWrapper((ReportWrapper) ic.getTarget());
+        reportRegistry.registerWrapper((ReportWrapper) ic.getTarget());
         log.log(Level.INFO, "ReportWrapper registered: " + ((ReportWrapper)ic.getTarget()).getReportName());
         ic.proceed();
     }

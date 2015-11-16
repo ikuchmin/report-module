@@ -1,6 +1,5 @@
 package ru.osslabs.modules.report;
 
-import javax.ejb.Startup;
 import javax.interceptor.InterceptorBinding;
 import java.lang.annotation.*;
 
@@ -15,5 +14,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Target({TYPE})
 public @interface ReportFactoryAnnotation {
-    Class<? extends ReportDiscoveryImpl> discovery() default ReportDiscoveryImpl.class;
+    Class<? extends ReportRegistryImpl> discovery() default ReportRegistryImpl.class;
 }

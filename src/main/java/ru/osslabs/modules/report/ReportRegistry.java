@@ -7,7 +7,7 @@ import java.util.Collection;
 /**
  * Created by ikuchmin on 10.11.15.
  */
-public interface ReportDiscovery {
+public interface ReportRegistry {
     Collection<ReportWrapper<?>> getReports();
 
     ReportWrapper<?> getReport(String reportPath);

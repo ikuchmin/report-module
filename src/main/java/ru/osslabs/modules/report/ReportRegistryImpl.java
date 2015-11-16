@@ -1,41 +1,29 @@
 package ru.osslabs.modules.report;
 
-import net.sf.jasperreports.engine.JRParameter;
-import net.sf.jasperreports.engine.design.JasperDesign;
-import net.sf.jasperreports.engine.xml.JRXmlLoader;
-import org.apache.commons.lang3.StringUtils;
 import ru.osslabs.commons.dataproviders.ReportsDataProvider;
-import ru.osslabs.datasources.util.ObjectTypeUtils;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.MetaObject;
 import ru.osslabs.model.datasource.ObjectType;
 import ru.osslabs.model.datasource.proxy.DataObjectProxyFactory;
 import ru.osslabs.model.reports.ReportInfo;
 import ru.osslabs.model.smartforms.MetaConstants;
-import ru.osslabs.modules.report.impls.sed.SEDDDunaevReport;
 import ru.osslabs.modules.report.impls.sed.SEDDDunaevReportWrapper;
 import ru.osslabs.modules.report.types.Report;
 
-import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.faces.application.Application;
 import javax.faces.context.FacesContext;
-import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static javax.ejb.ConcurrencyManagementType.BEAN;
-import static org.metawidget.inspector.InspectionResultConstants.PARAMETERIZED_TYPE;
 
 /**
  * Created by ikuchmin on 09.11.15.
@@ -46,7 +34,7 @@ import static org.metawidget.inspector.InspectionResultConstants.PARAMETERIZED_T
 @Singleton
 @ConcurrencyManagement(BEAN)
 @Dependent
-public class ReportDiscoveryImpl implements ReportsDataProvider, ReportDiscovery {
+public class ReportRegistryImpl implements ReportsDataProvider, ReportRegistry {
 
 //    @Inject
 //    private SEDDDunaevReportWrapper dunaevReportWrapper;
@@ -55,7 +43,7 @@ public class ReportDiscoveryImpl implements ReportsDataProvider, ReportDiscovery
 
     private Map<Path, ReportWrapper<?>> reportWrappers;
 
-    public ReportDiscoveryImpl() {
+    public ReportRegistryImpl() {
         reportWrappers = new ConcurrentHashMap<>();
     }
 
@@ -123,7 +111,7 @@ public class ReportDiscoveryImpl implements ReportsDataProvider, ReportDiscovery
 
                     param.setType(paramType);
 
-                    param.setCode(parameter.getName());
+                    param.setCode(parameter.getCode());
                     param.setName(parameter.getDescription());
 //                    if (!StringUtils.isEmpty(jRparam.getPropertiesMap().getProperty(PARAM_DEFAULT_VALUE)))
 //                        param.getAttributes().put(MetaConstants.FIELD_DEFAULT_VALUE_EL, jRparam.getPropertiesMap().getProperty(PARAM_DEFAULT_VALUE));

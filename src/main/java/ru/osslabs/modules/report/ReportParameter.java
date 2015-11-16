@@ -5,19 +5,21 @@ package ru.osslabs.modules.report;
  */
 public class ReportParameter {
     private final Class<?> typeParameter;
-    private final String name;
+    private final String code;
+
+    /**
+     * Description may be deprecated because in platform use messages
+     */
     private final String description;
 
-    //    private final
-
-    public ReportParameter(String name, String description, Class<?> typeParameter) {
+    public ReportParameter(String code, String description, Class<?> typeParameter) {
         this.typeParameter = typeParameter;
-        this.name = name;
+        this.code = code;
         this.description = description;
     }
 
-    public String getName() {
-        return name;
+    public String getCode() {
+        return code;
     }
 
     public String getDescription() {
