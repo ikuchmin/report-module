@@ -48,18 +48,16 @@ public class ReportRegistryImpl2 {
 
     @PostConstruct
     public void init() {
-        Set<Bean<?>> reportFactoryBeans = beanManager
-                .getBeans(Object.class, new AnnotationLiteral<Any>() {})
-                .stream()
-                .filter((bean) -> bean.getTypes().contains(ReportFactory.class))
-                .collect(Collectors.toSet());
-        reportFactoryBeans.forEach(this::reportFactoryInitialize);
+        System.out.println("Bp");
+        beanManager.getBeans(Object.class, new AnnotationLiteral<Any>() {}).stream()
+                .filter((bean) -> bean.getTypes().contains(ReportFactoryMarker.class))
+                .forEach(this::reportFactoryInitialize);
     }
 
     @SuppressWarnings("unchecked")
-    private void reportFactoryInitialize(Bean<?> reportFactoryBean) {
-        ReportFactory<? extends Report, ?> rf = (ReportFactory) beanManager.getReference(
-                reportFactoryBean, reportFactoryBean.getBeanClass(), beanManager.createCreationalContext(reportFactoryBean));
+    private <T> void reportFactoryInitialize(Bean<T> reportFactoryBean) {
+        ReportFactory<? extends Report, ?> rf = (ReportFactory) beanManager.getContext(reportFactoryBean.getScope())
+                .get(reportFactoryBean, beanManager.createCreationalContext(reportFactoryBean));
 
         Optional<Type> expectedClass = Arrays.asList(rf.getClass().getGenericInterfaces()).stream()
                 .map((in) -> (ParameterizedType) in)
