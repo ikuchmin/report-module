@@ -55,7 +55,7 @@ public class FirstReportToOutputStream<T extends BetweenDateReport & Destination
     }
 
     @Override
-    public Function<T, Void> getRunner(T report) {
+    public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
                 .compose(sedDataFetcher)
                 .transform(HSSFWorkbookTransformers::fromStreamTuplesToHSSFWorkbook)

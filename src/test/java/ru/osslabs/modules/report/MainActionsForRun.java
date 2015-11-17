@@ -1,32 +1,31 @@
 package ru.osslabs.modules.report;
 
-import javaslang.Function2;
-import javaslang.collection.Stream;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.junit.Test;
 import ru.osslabs.modules.report.decorators.BetweenDateReport;
+import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
 import ru.osslabs.modules.report.decorators.DestinationPathReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.impls.sed.SEDDDunaevReportFactory;
+import ru.osslabs.modules.report.factories.sed.ddunaev.SecondReportToOutputStream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 //import org.jooq.lambda.Seq;
 //import java.util.stream.Stream;
@@ -135,13 +134,44 @@ public class MainActionsForRun {
     @Test
     public <T1 extends String,
             T2 extends Integer> void testUnTypeInType() throws Exception {
-        Map<Integer, Function<?, ?>> functionMap = new HashMap<>();
+//        Map<Integer, Function<?, ?>> functionMap = new HashMap<>();
+//
+//        Function<T1, ?> fn1 = p -> p.concat("World");
+//        Function<T2, ?> fn2 = p -> p.intValue() + 12;
+//        functionMap.put(1, fn1);
+//        functionMap.put(2, fn2);
+//        System.out.println(functionMap.get(1).apply("dsfadsf"));
+//        System.out.println(funResolve(functionMap.get(2), 12));
+    }
 
-        Function<T1, ?> fn1 = p -> p.concat("World");
-        Function<T2, ?> fn2 = p -> p.intValue() + 12;
-        functionMap.put(1, fn1);
-        functionMap.put(2, fn2);
-        System.out.println(functionMap.get(1).apply("dsfadsf"));
-        System.out.println(funResolve(functionMap.get(2), 12));
+    @Test
+    public void testReflectionGenerics() throws Exception {
+        SecondReportToOutputStream<?> rf = new SecondReportToOutputStream<>();
+        Class<?> rfClass = rf.getClass();
+
+        Function<Class<?>, Class<?>> findInterface = (analyzeClass) -> {
+            for (Class<?> cl : rfClass.getInterfaces()) {
+                if (cl.equals(analyzeClass))
+                    return cl;
+            }
+            return null;
+        };
+
+        Arrays.asList(rf.getClass().getGenericInterfaces()).stream()
+                .map((in) -> (ParameterizedType) in)
+                .filter((in) -> in.getRawType() == ReportFactory.class)
+                .map((in) -> in.getActualTypeArguments()[1])
+                .findFirst();
+
+//        Class<?> reportFactoryInterface = findInterface.apply(ReportFactory.class);
+//        if (reportFactoryInterface != null) {
+//            ParameterizedType t = (ParameterizedType)reportFactoryInterface.getGenericInterfaces()[0];
+//            System.out.println((Class<?>)t.getActualTypeArguments()[1]);
+//        }
+
+//        ParameterizedType[] t = (ParameterizedType[]) rf.getClass().getGenericInterfaces();
+//        Class<?> reportResultType = (Class<?>) t.getActualTypeArguments()[0];
+//        System.out.println(reportResultType);
+
     }
 }

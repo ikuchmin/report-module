@@ -7,7 +7,6 @@ import ru.osslabs.model.datasource.ObjectType;
 import ru.osslabs.model.datasource.proxy.DataObjectProxyFactory;
 import ru.osslabs.model.reports.ReportInfo;
 import ru.osslabs.model.smartforms.MetaConstants;
-import ru.osslabs.modules.report.impls.sed.SEDDDunaevReportWrapper;
 import ru.osslabs.modules.report.types.Report;
 
 import javax.ejb.ConcurrencyManagement;
@@ -20,7 +19,9 @@ import javax.inject.Named;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static javax.ejb.ConcurrencyManagementType.BEAN;
@@ -74,13 +75,13 @@ public class ReportRegistryImpl implements ReportsDataProvider, ReportRegistry {
         Application application = context.getApplication();
 
 //        try {
-            int idx = 0;
-            for (ReportParameter parameter : reportWrappers.get(Paths.get(reportPath)).getReportParams()) {
-                    idx++;
-                    MetaObject param = new MetaObject();
-                    param.getAttributes().put(MetaConstants.FIELD_ROW, idx);
+        int idx = 0;
+        for (ReportParameter parameter : reportWrappers.get(Paths.get(reportPath)).getReportParams()) {
+            idx++;
+            MetaObject param = new MetaObject();
+            param.getAttributes().put(MetaConstants.FIELD_ROW, idx);
 
-                    ObjectType paramType = new ObjectType(parameter.getTypeParameter().getCanonicalName());
+            ObjectType paramType = new ObjectType(parameter.getTypeParameter().getCanonicalName());
 
 //                    String itemsExp = jRparam.getPropertiesMap().getProperty(PARAM_ITEMS);
 
@@ -109,18 +110,18 @@ public class ReportRegistryImpl implements ReportsDataProvider, ReportRegistry {
 //                        param.getAttributes().put(PARAMETERIZED_TYPE, cls.getName());
 //                    }
 
-                    param.setType(paramType);
+            param.setType(paramType);
 
-                    param.setCode(parameter.getCode());
-                    param.setName(parameter.getDescription());
+            param.setCode(parameter.getCode());
+            param.setName(parameter.getDescription());
 //                    if (!StringUtils.isEmpty(jRparam.getPropertiesMap().getProperty(PARAM_DEFAULT_VALUE)))
 //                        param.getAttributes().put(MetaConstants.FIELD_DEFAULT_VALUE_EL, jRparam.getPropertiesMap().getProperty(PARAM_DEFAULT_VALUE));
 //                    if (!jRparam.getPropertiesMap().containsProperty(PARAM_OPTIONAL))
 //                        param.getAttributes().put(MetaConstants.FIELD_REQUIRED, true);
 
 
-                    metaObject.getChildren().put(param.getCode(), param);
-                }
+            metaObject.getChildren().put(param.getCode(), param);
+        }
 //            }
 
 //        } catch (Exception e) {
@@ -144,7 +145,7 @@ public class ReportRegistryImpl implements ReportsDataProvider, ReportRegistry {
     }
 
     @Override
-    public ReportWrapper<?> getReport(String reportPath){
+    public ReportWrapper<?> getReport(String reportPath) {
         return reportWrappers.get(Paths.get(reportPath));
     }
 

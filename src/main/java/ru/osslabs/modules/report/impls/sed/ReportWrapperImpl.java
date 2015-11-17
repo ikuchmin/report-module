@@ -20,11 +20,11 @@ import static javax.ejb.ConcurrencyManagementType.BEAN;
 @Startup
 @Singleton
 @ConcurrencyManagement(BEAN)
-@DependsOn("ReportDiscoveryImpl")
+@DependsOn("ReportRegistryImpl")
 @Dependent
 @ReportWrapperAnnotation
 public class ReportWrapperImpl<T extends Report> implements ReportWrapper<T> {
-    @Inject // Use qualifier for separate implementation
+//    @Inject // Use qualifier for separate implementation
     ReportFactory reportFactory;
 
 //    @Inject  // Use qualifier for separate implementation
@@ -55,12 +55,14 @@ public class ReportWrapperImpl<T extends Report> implements ReportWrapper<T> {
 
     @Override
     public Collection<ExportType> getExportTypes() {
-        return reportFactory.getExportTypes();
+        return null;
+//        return reportFactory.getExportTypes();
     }
 
     @Override
     public <R> R runReport(ExportType type, T report, Class<R> expectedResult) {
-        return reportFactory.runReport(type, report, expectedResult);
+        return null;
+//        return reportFactory.runReport(type, report, expectedResult);
     }
 
     @Override

@@ -41,5 +41,5 @@ public interface ReportFactory<T extends Report, R> {
 
     Collection<ReportParameter> getReportParams();
 
-    Function<T, R> getRunner(T report);
+    Function<T, R> getRunner();
 }

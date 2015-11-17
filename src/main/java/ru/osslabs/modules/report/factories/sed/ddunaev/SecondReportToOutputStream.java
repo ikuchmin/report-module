@@ -46,7 +46,7 @@ public class SecondReportToOutputStream<T extends DestinationOutputStreamReport 
     }
 
     @Override
-    public Function<T, Void> getRunner(T report) {
+    public Function<T, Void> getRunner() {
         Double multiplier = 100.0;
         return (r) -> new ReportBuilder<>(r)
                 .compose(MockDataFetchers::matrixFiveOnTwentyFive)
