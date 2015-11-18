@@ -22,7 +22,7 @@ import java.util.stream.Stream;
  * Created by ikuchmin on 15.11.15.
  */
 //@ReportFactoryAnnotation
-public class FirstReportToOutputStream<T extends BetweenDateReport & DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T, Void>, ReportFactoryMarker {
+public class FirstReportToOutputStream<T extends BetweenDateReport & DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T, Void> {
 
     @Inject
     private Fetcher<BetweenDateReport, Stream<Tuple2<String, Integer>>> sedDataFetcher;
@@ -44,7 +44,7 @@ public class FirstReportToOutputStream<T extends BetweenDateReport & Destination
 
     @Override
     public ExportType getExportType() {
-        return ExportType.xml;
+        return ExportType.xls;
     }
 
     @Override

@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Created by ikuchmin on 09.11.15.
  */
-public interface ReportWrapper<T extends Report> {
+public interface ReportWrapper {
     String getReportName();
 
     String getReportCode();
@@ -21,7 +21,7 @@ public interface ReportWrapper<T extends Report> {
 
     Collection<ReportParameter> getReportParams();
 
-    <R> R runReport(ExportType type, T report, Class<R> expectedResult);
-
-    <R> R runReport(ExportType type, OutputStream outputStream, Class<R> expectedResult);
+//    <R> R runReport(ExportType type, T report, Class<R> expectedResult);
+//
+//    <R> R runReport(ExportType type, OutputStream outputStream, Class<R> expectedResult);
 }

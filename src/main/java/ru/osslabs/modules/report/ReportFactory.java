@@ -10,7 +10,7 @@ import java.util.function.Function;
  * Created by ikuchmin on 09.11.15.
  */
 
-public interface ReportFactory<T extends Report, R> {
+public interface ReportFactory<T extends Report, R> extends ReportFactoryMarker {
     /**
      * Перенести в аннатацию - @ReportFactoryAnnotation
      *
@@ -41,5 +41,9 @@ public interface ReportFactory<T extends Report, R> {
 
     Collection<ReportParameter> getReportParams();
 
+    /**
+     * Return function have to be clean in concurrency
+     * @return
+     */
     Function<T, R> getRunner();
 }

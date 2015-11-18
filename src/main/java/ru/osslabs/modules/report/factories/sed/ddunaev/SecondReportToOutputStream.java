@@ -18,7 +18,7 @@ import java.util.function.Function;
 /**
  * Created by ikuchmin on 15.11.15.
  */
-public class SecondReportToOutputStream<T extends DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T, Void>, ReportFactoryMarker {
+public class SecondReportToOutputStream<T extends DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T, Void> {
 
     @Override
     public String getReportCode() {
@@ -37,7 +37,7 @@ public class SecondReportToOutputStream<T extends DestinationOutputStreamReport 
 
     @Override
     public ExportType getExportType() {
-        return ExportType.xml;
+        return ExportType.xls;
     }
 
     @Override

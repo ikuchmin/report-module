@@ -1,9 +1,8 @@
 package ru.osslabs.modules.report.decorators;
 
+import javaslang.concurrent.Future;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import ru.osslabs.modules.report.types.Report;
-
-import java.util.concurrent.Future;
 
 /**
  * Created by ikuchmin on 08.11.15.

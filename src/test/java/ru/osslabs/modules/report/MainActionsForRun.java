@@ -86,39 +86,39 @@ public class MainActionsForRun {
 
 //    }
 
-    class SEDDunaevReport implements BetweenDateReport, DestinationPathReport, SourceFututeHSSFWorkBookReport {
-        @Override
-        public OffsetDateTime getFirstDate() {
-            return null;
-        }
-
-        @Override
-        public OffsetDateTime getLastDate() {
-            return null;
-        }
-
-        @Override
-        public Path getDestination() {
-            return Paths.get("template1.compiled.xls");
-        }
-
-        @Override
-        public Future<HSSFWorkbook> getHSSFWorkbookFuture() {
-            return Executors.newSingleThreadExecutor().submit(() -> {
-                Path templatePath = Paths.get("template1.xlt");
-                try (InputStream templateStream = new BufferedInputStream(Files.newInputStream(templatePath, StandardOpenOption.READ))) {
-                    return new HSSFWorkbook(new POIFSFileSystem(templateStream));
-                } catch (IOException io) {
-                    throw new RuntimeException(io);
-                }
-            });
-        }
-
-        @Override
-        public String getDataBagCellName() {
-            return "DataBeg";
-        }
-    }
+//    class SEDDunaevReport implements BetweenDateReport, DestinationPathReport, SourceFututeHSSFWorkBookReport {
+//        @Override
+//        public OffsetDateTime getFirstDate() {
+//            return null;
+//        }
+//
+//        @Override
+//        public OffsetDateTime getLastDate() {
+//            return null;
+//        }
+//
+//        @Override
+//        public Path getDestination() {
+//            return Paths.get("template1.compiled.xls");
+//        }
+//
+//        @Override
+//        public Future<HSSFWorkbook> getHSSFWorkbookFuture() {
+//            return Executors.newSingleThreadExecutor().submit(() -> {
+//                Path templatePath = Paths.get("template1.xlt");
+//                try (InputStream templateStream = new BufferedInputStream(Files.newInputStream(templatePath, StandardOpenOption.READ))) {
+//                    return new HSSFWorkbook(new POIFSFileSystem(templateStream));
+//                } catch (IOException io) {
+//                    throw new RuntimeException(io);
+//                }
+//            });
+//        }
+//
+//        @Override
+//        public String getDataBagCellName() {
+//            return "DataBeg";
+//        }
+//    }
 
 //        @Test
 //    public void testSEDDDunaevReportFactory() throws Exception {
