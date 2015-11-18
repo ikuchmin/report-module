@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.impls.sed;
+package ru.osslabs.modules.report.fetchers;
 
 import javaslang.Tuple;
 import javaslang.Tuple2;

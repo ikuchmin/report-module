@@ -1,19 +1,8 @@
-package ru.osslabs.modules.report.impls.sed;
+package ru.osslabs.modules.report;
 
-import ru.osslabs.modules.report.*;
-import ru.osslabs.modules.report.types.Report;
-
-import javax.ejb.*;
-import javax.enterprise.context.Dependent;
-import javax.inject.Inject;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
 import java.util.TreeSet;
-
-import static javax.ejb.ConcurrencyManagementType.BEAN;
 
 /**
  * Created by ikuchmin on 09.11.15.

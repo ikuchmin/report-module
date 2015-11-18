@@ -1,13 +1,11 @@
 package ru.osslabs.modules.report;
 
 import javaslang.concurrent.Future;
-import javaslang.control.Try;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import ru.osslabs.commons.dataproviders.ReportsDataProvider;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.reports.ReportInfo;
-import ru.osslabs.modules.report.impls.sed.CommonReportWrapper;
 import ru.osslabs.modules.report.types.Report;
 
 import javax.annotation.PostConstruct;
@@ -42,7 +40,7 @@ import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 @ConcurrencyManagement(BEAN)
 @Dependent
 public class ReportRegistry implements ReportsDataProvider {
-    private Map<RunnerKey, Function<? extends Report, ?>> runners = new HashMap<>(); // Function runner report is clean
+    private Map<RunnerKey, ReportFactory<? extends Report, ?>> runners = new HashMap<>(); // Function runner report is clean
     private Map<String, CommonReportWrapper> reportWrappers = new TreeMap<>();
 
     @Inject
@@ -74,7 +72,7 @@ public class ReportRegistry implements ReportsDataProvider {
 
         // Function report flow is available with RunnerKey
         RunnerKey runnerKey = new RunnerKey(rf.getReportCode(), rf.getExportType(), (Class<?>) expectedClass.orElse(Object.class));
-        if (runners.put(runnerKey, rf.getRunner()) != null)
+        if (runners.put(runnerKey, rf) != null)
             logger.log(Level.WARNING, "In system is concurrence report flow with key: {0}", runnerKey);
 
         // Report information is available with ReportCode
@@ -108,7 +106,7 @@ public class ReportRegistry implements ReportsDataProvider {
      */
     @SuppressWarnings("unchecked")
     public <T extends Report, R> R runReport(String reportCode, ExportType type, T report, Class<R> expectedResult) {
-        Function<? extends Report, ?> runner = objectNotNull(() -> runners.get(new RunnerKey(reportCode, type, expectedResult)), () -> {
+        Function<? extends Report, ?> runner = objectNotNull(() -> runners.get(new RunnerKey(reportCode, type, expectedResult)).getRunner(), () -> {
             throw new IllegalArgumentException("Report not found");
         });
 
