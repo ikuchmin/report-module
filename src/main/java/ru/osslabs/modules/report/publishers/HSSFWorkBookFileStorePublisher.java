@@ -25,14 +25,6 @@ public class HSSFWorkBookFileStorePublisher {
         }
     }
 
-    /**
-     * Пока оставим возврат Boolean пото
-     * @param report
-     * @param reportForPublication
-     * @param <Re>
-     * @param <ReC>
-     * @return
-     */
     public static <Re extends DestinationOutputStreamReport, ReC extends HSSFWorkbook> Void writeToOutputStream(Re report, ReC reportForPublication) {
         try (OutputStream outputStream = new BufferedOutputStream(report.getDestinationOS())) {
             reportForPublication.write(outputStream);

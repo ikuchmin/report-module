@@ -20,8 +20,4 @@ public interface ReportWrapper {
     Collection<ExportType> getExportTypes();
 
     Collection<ReportParameter<?>> getReportParams();
-
-//    <R> R runReport(ExportType type, T report, Class<R> expectedResult);
-//
-//    <R> R runReport(ExportType type, OutputStream outputStream, Class<R> expectedResult);
 }

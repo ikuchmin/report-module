@@ -22,7 +22,6 @@ import java.util.stream.Stream;
 /**
  * Created by ikuchmin on 15.11.15.
  */
-//@ReportFactoryAnnotation
 public class FirstReportToOutputStream<T extends BetweenDateReport & DestinationOutputStreamReport & SourceFututeHSSFWorkBookReport> implements ReportFactory<T, Void> {
 
     @Inject

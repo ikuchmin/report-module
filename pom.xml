@@ -15,27 +15,6 @@
     <version>0.0.4-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <!--<profiles>-->
-        <!--<profile>-->
-            <!--<id>allow-snapshots</id>-->
-            <!--<activation>-->
-                <!--<activeByDefault>true</activeByDefault>-->
-            <!--</activation>-->
-            <!--<repositories>-->
-                <!--<repository>-->
-                    <!--<id>snapshots-repo</id>-->
-                    <!--<url>https://oss.sonatype.org/content/repositories/snapshots</url>-->
-                    <!--<releases>-->
-                        <!--<enabled>false</enabled>-->
-                    <!--</releases>-->
-                    <!--<snapshots>-->
-                        <!--<enabled>true</enabled>-->
-                    <!--</snapshots>-->
-                <!--</repository>-->
-            <!--</repositories>-->
-        <!--</profile>-->
-    <!--</profiles>-->
-
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -47,11 +26,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <!--<compilerArguments>-->
-                        <!--<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>-->
-                    <!--</compilerArguments>-->
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
         </plugins>
@@ -89,25 +65,11 @@
             <artifactId>jasperreports</artifactId>
             <version>6.1.0</version>
         </dependency>
+
         <dependency>
             <groupId>org.comsoft.juniprint</groupId>
             <artifactId>juniprint</artifactId>
             <version>0.0.2-SNAPSHOT</version>
-        </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.jooq</groupId>-->
-            <!--<artifactId>jool</artifactId>-->
-            <!--<version>0.9.7</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>io.github.amaembo</groupId>-->
-            <!--<artifactId>streamex</artifactId>-->
-            <!--<version>0.4.0</version>-->
-        <!--</dependency>-->
-        <dependency>
-            <groupId>org.jboss</groupId>
-            <artifactId>jandex</artifactId>
-            <version>2.0.0.Final</version>
         </dependency>
         <dependency>
             <groupId>com.javaslang</groupId>

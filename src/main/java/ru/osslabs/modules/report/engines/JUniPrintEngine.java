@@ -4,8 +4,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.comsoft.juniprint.JUniPrint;
 import org.comsoft.juniprint.JUniPrintException;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.types.JUniPrintReport;
-import ru.osslabs.modules.report.functions.Engine;
 
 /**
  * Created by ikuchmin on 03.11.15.

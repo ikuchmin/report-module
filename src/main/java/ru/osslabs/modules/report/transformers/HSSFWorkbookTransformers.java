@@ -35,7 +35,7 @@ public class HSSFWorkbookTransformers {
     }
 
     /**
-     * Первое использование для отчета Димы Дунаева
+     * First uses is report for SED
      *
      * @param report
      * @param data
