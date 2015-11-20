@@ -16,9 +16,33 @@
     <packaging>jar</packaging>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <build.number>${maven.build.timestamp}</build.number>
+        <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
+        <build.number.manifest>${project.version}-${build.number}</build.number.manifest>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>osslabs-releases</id>
+            <url>http://maven-repository.osslabs.ru/content/repositories/releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>osslabs-snapshots</id>
+            <url>http://maven-repository.osslabs.ru/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <scm>
+        <connection>
+            scm:git:ssh://git@git-repository.osslabs.ru:ikuchmin/report-module.git
+        </connection>
+        <developerConnection>
+            scm:git:ssh://git@git-repository.osslabs.ru:ikuchmin/report-module.git
+        </developerConnection>
+    </scm>
 
     <build>
         <plugins>
@@ -28,6 +52,21 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Build-Number>${build.number.manifest}</Build-Number>
+                            <Git-Commit>${git.commit}</Git-Commit>
+                            <Git-URL>${git.url}</Git-URL>
+                            <Git-Branch>${git.branch}</Git-Branch>
+                        </manifestEntries>
+                    </archive>
                 </configuration>
             </plugin>
         </plugins>
