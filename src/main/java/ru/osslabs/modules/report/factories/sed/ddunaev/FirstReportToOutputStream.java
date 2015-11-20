@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -48,10 +49,10 @@ public class FirstReportToOutputStream<T extends BetweenDateReport & Destination
     }
 
     @Override
-    public Collection<ReportParameter> getReportParams() {
+    public Collection<ReportParameter<?>> getReportParams() {
         return Arrays.asList(
-                new ReportParameter("beginDate", "Дата начала диапазона", String.class),
-                new ReportParameter("endDate", "Дата окончания диапазона", String.class));
+                new ReportParameter<>("beginDate", "Дата начала диапазона", Date.class, new Date(), false),
+                new ReportParameter<>("endDate", "Дата окончания диапазона", Date.class, new Date(), false));
     }
 
     @Override

@@ -79,7 +79,11 @@
             <artifactId>datasources-module</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>ru.osslabs.platform</groupId>
+            <artifactId>reports-module</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>

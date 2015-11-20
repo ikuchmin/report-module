@@ -1,12 +1,19 @@
 package ru.osslabs.modules.report;
 
 import javaslang.concurrent.Future;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import ru.osslabs.commons.dataproviders.ReportsDataProvider;
+import ru.osslabs.datasources.util.ObjectTypeUtils;
 import ru.osslabs.model.datasource.DataObject;
+import ru.osslabs.model.datasource.MetaObject;
+import ru.osslabs.model.datasource.ObjectType;
+import ru.osslabs.model.datasource.proxy.DataObjectProxyFactory;
 import ru.osslabs.model.reports.ReportInfo;
+import ru.osslabs.model.smartforms.MetaConstants;
 import ru.osslabs.modules.report.types.Report;
+import ru.osslabs.report.jasper.JasperReports;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.ConcurrencyManagement;
@@ -17,10 +24,13 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.util.AnnotationLiteral;
+import javax.faces.application.Application;
+import javax.faces.context.FacesContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.BufferedInputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -29,6 +39,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static javax.ejb.ConcurrencyManagementType.BEAN;
+import static org.metawidget.inspector.InspectionResultConstants.PARAMETERIZED_TYPE;
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 
 /**
@@ -49,6 +60,8 @@ public class ReportRegistry implements ReportsDataProvider {
     @Inject
     Logger logger;
 
+    @Inject
+    JasperReports jasperReports;
 
     @PostConstruct
     public synchronized void init() {
@@ -106,9 +119,9 @@ public class ReportRegistry implements ReportsDataProvider {
      */
     @SuppressWarnings("unchecked")
     public <T extends Report, R> R runReport(String reportCode, ExportType type, T report, Class<R> expectedResult) {
-        Function<? extends Report, ?> runner = objectNotNull(() -> runners.get(new RunnerKey(reportCode, type, expectedResult)).getRunner(), () -> {
+        Function<? extends Report, ?> runner = objectNotNull(() -> runners.get(new RunnerKey(reportCode, type, expectedResult)), () -> {
             throw new IllegalArgumentException("Report not found");
-        });
+        }).getRunner();
 
         return (R) unboxFunction(runner, report);
     }
@@ -120,15 +133,20 @@ public class ReportRegistry implements ReportsDataProvider {
 
     @Override
     public ReportInfo getReportInfo(String s) {
-        return null;
+        return new ReportInfo();
     }
 
-    @Override
-    public Collection<CommonReportWrapper> getReports() {
-        return reportWrappers.values();
-    }
+//    @Override
+//    public Collection<CommonReportWrapper> getReports() {
+//        return reportWrappers.values();
+//    }
 
     @Override
+    public List<ru.osslabs.model.reports.Report> getReports() {
+        return jasperReports.getReports();
+    }
+
+//    @Override
     public ReportWrapper getReport(String reportCode) {
         return reportWrappers.get(reportCode);
     }
@@ -138,9 +156,83 @@ public class ReportRegistry implements ReportsDataProvider {
         return null;
     }
 
+    /**
+     * Base version get from class JasperReports wrote by Anatoly Chervyakov
+     * @param reportCode
+     * @return DataObject use for create form
+     */
     @Override
-    public DataObject getReportParams(String s) {
-        return null;
+    public DataObject getReportParams(String reportCode) {
+
+        MetaObject metaObject = new MetaObject(reportCode, reportCode, reportCode);
+        FacesContext context = FacesContext.getCurrentInstance();
+        Application application = context.getApplication();
+
+        try {
+            CommonReportWrapper reportWrapper = reportWrappers.get(reportCode);
+            int idx = 0;
+            for (ReportParameter jRparam : reportWrapper.getReportParams()) {
+                    idx++;
+                    MetaObject param = new MetaObject();
+                    param.getAttributes().put(MetaConstants.FIELD_ROW, idx);
+
+                    ObjectType paramType = new ObjectType(jRparam.getTypeParameter().getName());
+
+                    String itemsExp = jRparam.getItemExpr();
+
+
+                    if (!StringUtils.isEmpty(itemsExp)) {
+                        Object list = application.evaluateExpressionGet(context, itemsExp, Object.class);
+
+                        if (list instanceof String) {
+                            String[] items = StringUtils.split((String) list, ";");
+                            list = new ArrayList();
+                            for (String item : items) {
+                                String[] valLab = item.split(":");
+                                ((ArrayList) list).add(valLab);
+                            }
+                        }
+
+                        Class cls = null;
+                        if (Collection.class.isAssignableFrom(jRparam.getTypeParameter())) {
+                            cls = (new ArrayList<Object>()).getClass();
+                        } else if (jRparam.getTypeParameter().isArray()) {
+                            cls = Array.newInstance(Object.class, 0).getClass();
+                        } else if (!StringUtils.isEmpty(itemsExp)) {
+                            cls = jRparam.getTypeParameter();
+                        }
+                        //TODO: refact
+                        paramType = ObjectTypeUtils.createSelectStatic(cls, MetaConstants.FieldTypes.LookupType.NAME, (List) list, false);
+                        param.getAttributes().put(PARAMETERIZED_TYPE, cls.getName());
+                    }
+
+                    param.setType(paramType);
+
+                    param.setCode(jRparam.getCode());
+                    param.setName(jRparam.getDescription());
+
+//                    if (!StringUtils.isEmpty((String)jRparam.getDefaultValue())) // In this situation used only String. if you wanted have comment, you would tell with tolik
+                    if (jRparam.getDefaultValue() != null)
+                        param.getAttributes().put(MetaConstants.FIELD_DEFAULT_VALUE_EL, jRparam.getDefaultValue());
+                    if (!jRparam.isOptional())
+                        param.getAttributes().put(MetaConstants.FIELD_REQUIRED, true);
+
+
+                    metaObject.getChildren().put(param.getCode(), param);
+                }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        DataObject result = DataObjectProxyFactory.createDataObject(new Class[]{MetaObject.class, boolean.class}, new Object[]{metaObject, true});
+
+        return result;
+    }
+    @Override
+    public void runReport(String s, ru.osslabs.model.reports.Report.ExportType exportType, OutputStream outputStream, Map<String, Object> map) {
+        runReport(s, ExportType.valueOf(exportType.name()), outputStream, map);
     }
 
     /**
@@ -149,7 +241,7 @@ public class ReportRegistry implements ReportsDataProvider {
      * @param outputStream
      * @param map
      */
-    @Override
+//    @Override
     public void runReport(String reportCode, ExportType exportType, OutputStream outputStream, Map<String, Object> map) {
         runReport(reportCode, exportType,
                 new CommonBuilder(Future.of(() ->
@@ -162,7 +254,7 @@ public class ReportRegistry implements ReportsDataProvider {
 
     @Override
     public List<String> getReportFilesList() {
-        return null;
+        return new ArrayList<>(reportWrappers.keySet());
     }
 
     public static class RunnerKey {

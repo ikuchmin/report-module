@@ -13,6 +13,7 @@ import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Function;
 
 /**
@@ -41,8 +42,8 @@ public class SecondReportToOutputStream<T extends DestinationOutputStreamReport 
     }
 
     @Override
-    public Collection<ReportParameter> getReportParams() {
-        return null;
+    public Collection<ReportParameter<?>> getReportParams() {
+        return Collections.EMPTY_LIST;
     }
 
     @Override

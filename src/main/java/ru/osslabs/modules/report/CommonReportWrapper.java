@@ -17,7 +17,7 @@ public class CommonReportWrapper implements ReportWrapper {
     private String reportCode;
     private Path reportPath;
     private String reportName;
-    private Collection<ReportParameter> reportParams;
+    private Collection<ReportParameter<?>> reportParams;
     private Collection<ExportType> exportTypes;
 
 
@@ -34,7 +34,7 @@ public class CommonReportWrapper implements ReportWrapper {
     public CommonReportWrapper(String reportCode,
                                Path reportPath,
                                String reportName,
-                               Collection<ReportParameter> reportParams,
+                               Collection<ReportParameter<?>> reportParams,
                                Collection<ExportType> exportTypes) {
         this.reportCode = reportCode;
         this.reportPath = reportPath;
@@ -46,7 +46,7 @@ public class CommonReportWrapper implements ReportWrapper {
     public CommonReportWrapper(String reportCode,
                                Path reportPath,
                                String reportName,
-                               Collection<ReportParameter> reportParams) {
+                               Collection<ReportParameter<?>> reportParams) {
         this(reportCode, reportPath, reportName, reportParams, new TreeSet<>());
     }
 
@@ -66,7 +66,7 @@ public class CommonReportWrapper implements ReportWrapper {
     }
 
     @Override
-    public Collection<ReportParameter> getReportParams() {
+    public Collection<ReportParameter<?>> getReportParams() {
         return reportParams;
     }
 

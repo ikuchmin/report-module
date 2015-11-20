@@ -3,8 +3,8 @@ package ru.osslabs.modules.report;
 /**
  * Created by ikuchmin on 09.11.15.
  */
-public class ReportParameter {
-    private final Class<?> typeParameter;
+public class ReportParameter<T> {
+    private final Class<T> typeParameter;
     private final String code;
 
     /**
@@ -12,10 +12,32 @@ public class ReportParameter {
      */
     private final String description;
 
-    public ReportParameter(String code, String description, Class<?> typeParameter) {
+    /**
+     * This used for work view in platform
+     */
+    private final String itemExpr;
+
+    /**
+     * This used for work view in platform
+     */
+    private final T defaultValue;
+
+    /**
+     * This used for work view in platform
+     */
+    private final boolean optional;
+
+    public ReportParameter(String code, String description, Class<T> typeParameter, T defaultValue, boolean optional) {
+        this(code, description, typeParameter, "", defaultValue, optional);
+    }
+
+    public ReportParameter(String code, String description, Class<T> typeParameter, String itemExpr, T defaultValue, boolean optional) {
         this.typeParameter = typeParameter;
         this.code = code;
         this.description = description;
+        this.itemExpr = itemExpr;
+        this.defaultValue = defaultValue;
+        this.optional = optional;
     }
 
     public String getCode() {
@@ -26,7 +48,19 @@ public class ReportParameter {
         return description;
     }
 
-    public Class<?> getTypeParameter() {
+    public Class<T> getTypeParameter() {
         return typeParameter;
+    }
+
+    public String getItemExpr() {
+        return itemExpr;
+    }
+
+    public T getDefaultValue() {
+        return defaultValue;
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 }

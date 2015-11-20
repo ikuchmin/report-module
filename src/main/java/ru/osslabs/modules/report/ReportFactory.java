@@ -39,7 +39,7 @@ public interface ReportFactory<T extends Report, R> extends ReportFactoryMarker 
      */
     ExportType getExportType();
 
-    Collection<ReportParameter> getReportParams();
+    Collection<ReportParameter<?>> getReportParams();
 
     /**
      * Return function have to be clean in concurrency
