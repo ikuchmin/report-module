@@ -77,6 +77,8 @@ public class SPUSubServicesDataFetcher implements Fetcher<BetweenDateReport, Str
     }
 
 
+
+
     private <R> R getFieldAndCast(Map<String, DataObjectField> fields, String value) {
         return cast(fields.get(value).getValue());
     }

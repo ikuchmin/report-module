@@ -37,6 +37,18 @@ public class SubService {
         this.methodsGetResult = methodsGetResult;
     }
 
+    public static class Rejection {
+        private String description;
+
+        public Rejection(String description) {
+            this.description = description;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+    }
+
     public static class PaymentSubService {
         private String name;
         private List<String> npa;
