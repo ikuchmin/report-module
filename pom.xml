@@ -16,6 +16,7 @@
     <packaging>jar</packaging>
 
     <properties>
+        <platform.version>1.0-SNAPSHOT</platform.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <build.number>${maven.build.timestamp}</build.number>
         <maven.build.timestamp.format>yyyyMMdd.HHmmss</maven.build.timestamp.format>
@@ -82,27 +83,34 @@
         <dependency>
             <groupId>ru.osslabs.platform</groupId>
             <artifactId>commons</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${platform.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.osslabs.platform</groupId>
             <artifactId>models</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${platform.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.osslabs.platform</groupId>
             <artifactId>datasources-module</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${platform.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.osslabs.platform</groupId>
             <artifactId>reports-module</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${platform.version}</version>
         </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
             <version>6.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.16.6</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>

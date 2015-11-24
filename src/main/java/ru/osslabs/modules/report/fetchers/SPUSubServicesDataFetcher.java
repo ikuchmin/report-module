@@ -3,9 +3,11 @@ package ru.osslabs.modules.report.fetchers;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.ExternalDataSource;
-import ru.osslabs.modules.report.decorators.BetweenDateReport;
-import ru.osslabs.modules.report.domain.spu.SubService;
+import ru.osslabs.modules.report.reflections.ObjectMapper;
+import ru.osslabs.modules.report.domain.spu.SubService2;
+import ru.osslabs.modules.report.domain.spu.SubServices;
 import ru.osslabs.modules.report.functions.Fetcher;
+import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -13,22 +15,34 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class SPUSubServicesDataFetcher implements Fetcher<BetweenDateReport, Stream<SubService>> {
+public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServices>> {
 
     @Inject
     ExternalDataSource dataSource;
 
     @Override
     @SuppressWarnings("unchecked")
-    public Stream<SubService> compose(BetweenDateReport report) {
-        Integer serviceId = 4023;
+    public Stream<SubServices> compose(Report report) {
+        Integer serviceId = 2187;
+        List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
 
-        List<DataObject> subServices = (List<DataObject>) dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
+        subServices.stream().map((dataObject) -> {
+            DataObjectField dof = new DataObjectField();
+            dof.setValue(dataObject);
+            return new ObjectMapper().readValue(dof, SubServices.class, Object.class);
+        }).collect(toList());
+//        Object obj = new ObjectMapper().readValue(subServices, SubServices.class, Object.class);
+//        List<SubServices> subServicesList = subServices.stream().map(e -> new ObjectMapper().readValue(e, SubServices.class)).collect(Collectors.toList());
+//        Stream<SubServices> subServicesStream = subServices.stream().map(e -> new ObjectMapper().readValue(subServices.get(0), SubServices.class));
+//        return subServicesStream;
 
-        return subServices.stream().map(this::createObjectSubService);
+        return null;
+//        return subServices.stream().map(this::createObjectSubService);
 
 //        // TODO: Replace stream() on parallel execution after CMDBuildWrapperWS is synchronized. Ticket: #9676
 //        Map<String, Integer> countInstanceObjects = cmdClasses.stream()
@@ -46,21 +60,21 @@ public class SPUSubServicesDataFetcher implements Fetcher<BetweenDateReport, Str
 //                Tuple.of(descriptionClasses.get(cmdClass), countInstanceObjects.get(cmdClass)));
     }
 
-    private SubService createObjectSubService(DataObject dataObject) {
+    private SubService2 createObjectSubService(DataObject dataObject) {
         Map<String, DataObjectField> fields = dataObject.getFields();
-        return new SubService(
+        return new SubService2(
                 getFieldAndCast(fields, "namesubservice"),
-                new SubService.PeriodSubService(
-                        new SubService.Unit<>(
+                new SubService2.PeriodSubService(
+                        new SubService2.Unit<>(
                                 getFieldAndCast(fields, "periodsubservice"),
                                 getFieldAndCast(fields, "FormPeriodSubservice")),
-                        new SubService.Unit<>(
+                        new SubService2.Unit<>(
                                 getFieldAndCast(fields, "PeriodSubservice_ExTerr"),
                                 getFieldAndCast(fields, "FormPeriodSubservice_ExTer"))),
                 createCollectionOnAttribute(getFieldAndCast(fields, "reject_noRecept"), "Description"),
                 createCollectionOnAttribute(getFieldAndCast(fields, "rejection_noProv"), "Description"),
                 createCollectionOnAttribute(getFieldAndCast(fields, "rejection_noAct"), "Description"),
-                new SubService.Unit<>(
+                new SubService2.Unit<>(
                         getFieldAndCast(fields, "suspension_days"),
                         getFieldAndCast(fields, "FormSuspension_days")),
                 null,
@@ -73,7 +87,7 @@ public class SPUSubServicesDataFetcher implements Fetcher<BetweenDateReport, Str
         return collection.stream()
                 .map(DataObject::getFields)
                 .map((obj) -> this.<String>getFieldAndCast(obj, field))
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 
 

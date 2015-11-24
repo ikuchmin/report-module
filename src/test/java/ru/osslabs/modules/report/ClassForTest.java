@@ -19,10 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -34,4 +31,34 @@ import java.util.function.Function;
  * Created by ikuchmin on 03.11.15.
  */
 public class ClassForTest {
+    public static class ATT {
+        void dispatch(Object obj) {
+            System.out.println("Object");
+        }
+    }
+
+    public static class TT extends ATT {
+
+        void dispatch(String obj) {
+            System.out.println("String");
+        }
+        void dispatch(Integer obj) {
+            System.out.println("Integer");
+        }
+
+        void dispatch(TT obj) {
+            System.out.println("TT");
+        }
+    }
+
+    public static class TTS extends TT {
+
+    }
+
+    @Test
+    public void testDispathcingOnType() throws Exception {
+        new TT().dispatch((Object) new TTS());
+        new TT().dispatch("hell");
+        new TT().dispatch(42);
+    }
 }

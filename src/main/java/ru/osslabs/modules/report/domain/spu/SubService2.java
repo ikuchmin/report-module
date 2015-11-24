@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * Created by ikuchmin on 19.11.15.
  */
-public class SubService {
+public class SubService2 {
 
     private String name;
     private PeriodSubService period;
@@ -17,15 +17,15 @@ public class SubService {
     private List<String> methodsGet;
     private List<String> methodsGetResult;
 
-    public SubService(String name, PeriodSubService period,
-                      List<String> reasonRejectDocuments,
-                      List<String> reasonReject,
-                      List<String> reasonSuspend,
-                      Unit<Integer, String> suspendCount,
-                      Unit<Integer, String> unitSuspend,
-                      PaymentSubService payment,
-                      List<String> methodsGet,
-                      List<String> methodsGetResult) {
+    public SubService2(String name, PeriodSubService period,
+                       List<String> reasonRejectDocuments,
+                       List<String> reasonReject,
+                       List<String> reasonSuspend,
+                       Unit<Integer, String> suspendCount,
+                       Unit<Integer, String> unitSuspend,
+                       PaymentSubService payment,
+                       List<String> methodsGet,
+                       List<String> methodsGetResult) {
         this.name = name;
         this.period = period;
         this.reasonRejectDocuments = reasonRejectDocuments;
