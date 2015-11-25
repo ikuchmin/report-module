@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.osslabs.modules.report.CMDBuildField;
+import ru.osslabs.modules.report.domain.Lookup;
 
 import java.util.List;
 
@@ -23,11 +24,11 @@ public class SubServices {
 //    private String desc2;
     private Integer periodsubservice;
     @CMDBuildField(name = "FormPeriodSubservice")
-    private String formPeriodSubservice;
+    private Lookup<String> formPeriodSubservice;
     @CMDBuildField(name = "PeriodSubservice_ExTerr")
     private Integer periodSubservice_ExTerr;
     @CMDBuildField(name = "FormPeriodSubservice_ExTer")
-    private String formPeriodSubservice_ExTer;
+    private Lookup<String> formPeriodSubservice_ExTer;
     //    private LOOKUP refusAccept;
     private List<Rejection> reject_noRecept;
     //    private LOOKUP denial;

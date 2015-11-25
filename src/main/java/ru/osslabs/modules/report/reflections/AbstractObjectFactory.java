@@ -12,14 +12,4 @@ public abstract class AbstractObjectFactory<T> implements ObjectFactory<T> {
         this.objectRegistry = objectRegistry;
     }
 
-    /**
-     * It is stub for work dispatching on dataObject
-     * @param obj
-     * @param type
-     * @return
-     */
-    @Override
-    public T build(Object obj, Class<? extends T> type) {
-        return null;
-    };
 }

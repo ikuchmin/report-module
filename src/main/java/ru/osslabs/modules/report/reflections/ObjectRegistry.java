@@ -16,5 +16,5 @@ public interface ObjectRegistry {
      * @param <T>
      * @return
      */
-    <T> Function2<IData, Class<? extends T>, Option<T>> dispatch(Class<? extends T> cls);
+    <T> Function2<IData, Class<? extends T>, Option<T>> dispatch(Class<?> cls);
 }

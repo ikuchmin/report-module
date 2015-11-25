@@ -1,5 +1,6 @@
 package ru.osslabs.modules.report;
 
+import javaslang.collection.Stream;
 import javaslang.concurrent.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -77,6 +78,7 @@ public class ReportRegistry implements ReportsDataProvider {
                 .get(reportFactoryBean, beanManager.createCreationalContext(reportFactoryBean));
 
         // TODO: This function is not tested on wildcard <? extends T> in generic class.
+        // TODO: Not all implemented interfaces can be ParameterizedType
         Optional<Type> expectedClass = Arrays.asList(rf.getClass().getGenericInterfaces()).stream()
                 .map((in) -> (ParameterizedType) in)
                 .filter((in) -> in.getRawType() == ReportFactory.class)

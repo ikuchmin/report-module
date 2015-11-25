@@ -1,5 +1,7 @@
 package ru.osslabs.modules.report;
 
+import javaslang.collection.Stream;
+import javaslang.control.Option;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.junit.Test;
@@ -24,6 +26,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
+
 //import org.jooq.lambda.Seq;
 //import java.util.stream.Stream;
 
@@ -42,6 +46,7 @@ public class ClassForTest {
         void dispatch(String obj) {
             System.out.println("String");
         }
+
         void dispatch(Integer obj) {
             System.out.println("Integer");
         }
@@ -57,8 +62,38 @@ public class ClassForTest {
 
     @Test
     public void testDispathcingOnType() throws Exception {
+//        List<?> lst = null;
+//        Class<?> cl = List.class;
+//        Class<? extends List<?>> cll = cl;
         new TT().dispatch((Object) new TTS());
         new TT().dispatch("hell");
         new TT().dispatch(42);
+    }
+
+    class AZ {
+        List<String> str;
+    }
+
+    public static void method(List<?> lst) {
+        System.out.println(((ParameterizedType)lst.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0]);
+    }
+    @Test
+    public void testReflection() throws Exception {
+        method(new ArrayList<AZ>());
+//        Option<Type> expectedClass =
+//        Stream.ofAll(AZ.class.getDeclaredFields())
+//                .flatMap((f) -> f.getType().getGenericInterfaces())
+//                .forEach(System.out::println);
+
+
+//        Type[] genericInterfaces = type.getClass().getGenericInterfaces();
+//                Stream.ofAll([1])
+//                .forEach(System.out::println);
+//                .map((in) -> (ParameterizedType) in)
+//                .filter((in) -> in.getRawType() == List.class)
+//                .map((in) -> in.getActualTypeArguments()[1])
+//                .headOption();
+//
+//        System.out.println(genericInterfaces);
     }
 }

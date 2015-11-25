@@ -52,7 +52,7 @@ public class ObjectMapper {
      */
     public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        return Option.of(objectRegistry.dispatch(cls))
+        return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz));
     }
 
@@ -65,14 +65,14 @@ public class ObjectMapper {
      */
     public <T> T readValue(DataObject dataObject, Class<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        return Option.of(objectRegistry.dispatch(cls))
+        return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz)).get();
     }
 
 
     public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        return objectRegistry.dispatch(clazz).apply(dataObject, clazz);
+        return objectRegistry.<T>dispatch(clazz).apply(dataObject, clazz);
     }
 
 

@@ -17,15 +17,15 @@ import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
 /**
  * Created by ikuchmin on 24.11.15.
  */
-public class ObjectFactoryImpl extends AbstractObjectFactory<Object> {
+public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
 
     public ObjectFactoryImpl(ObjectRegistry objectRegistry) {
         super(objectRegistry);
     }
 
     @Override
-    public Object build(DataObject dataObject, Class<?> type) {
-        Object instance;
+    public T build(DataObject dataObject, Class<? extends T> type) {
+        T instance;
         try {
             instance = type.getConstructor().newInstance();
         } catch (NoSuchMethodException e) {
@@ -38,21 +38,27 @@ public class ObjectFactoryImpl extends AbstractObjectFactory<Object> {
             field.setAccessible(true);
             Option.of(objectRegistry.dispatch(field.getType())) // TODO: При поиске метода построения объекта необходимо использовать его иерархию. По аналогии с бинами
                     .map((func) -> func.apply(dataObject.getFields().get(actualFieldName(field)), field.getType()))
-                    .peek((val) -> Try.run(() -> field.set(instance, val)).onFailure(e -> {
+                    .peek((val) -> val.peek((v) -> Try.run(() -> field.set(instance, v)).onFailure(e -> {
                         throw new RuntimeException("Field with name " + field.getName() + " isn't set", e);
-                    }));
+                    })));
         }
         return instance;
     }
 
     @Override
-    public Object build(List<DataObject> dataObjectList, Class<?> type) {
+    public T build(List<DataObject> dataObjectList, Class<? extends T> type) {
         return null;
     }
 
     @Override
-    public Object build(DataObject[] dataObjects, Class<?> type) {
+    public T build(DataObject[] dataObjects, Class<? extends T> type) {
         return null;
     }
+
+    @Override
+    public T build(Object dataObjects, Class<? extends T> type) {
+        return null;
+    }
+
 
 }
