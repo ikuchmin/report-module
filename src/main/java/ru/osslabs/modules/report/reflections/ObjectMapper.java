@@ -5,7 +5,9 @@ import javaslang.control.Option;
 import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
+import ru.osslabs.model.datasource.IData;
 import ru.osslabs.modules.report.CMDBuildField;
+import ru.osslabs.modules.report.domain.spu.SubServices;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -42,20 +44,38 @@ public class ObjectMapper {
 
     /**
      * TODO: Temp decision
+     *
      * @param dataObject
      * @param clazz
      * @param <T>
      * @return
      */
-    public <T> T readValue(DataObjectField dataObject, Class<? extends T> clazz, Class<T> cls) {
+    public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        return objectRegistry.dispatch(cls).apply(dataObject, clazz);
+        return Option.of(objectRegistry.dispatch(cls))
+                .flatMap((fn) -> fn.apply(dataObject, clazz));
     }
 
-    public <T> T readValue(DataObjectField dataObject, Class<? extends T> clazz) {
+    /**
+     * @param dataObject
+     * @param clazz
+     * @param <T>
+     * @return
+     * @throws NoSuchElementException
+     */
+    public <T> T readValue(DataObject dataObject, Class<? extends T> clazz, Class<T> cls) {
+        Objects.requireNonNull(dataObject, "DataObject wouldn't null");
+        return Option.of(objectRegistry.dispatch(cls))
+                .flatMap((fn) -> fn.apply(dataObject, clazz)).get();
+    }
+
+
+    public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
         return objectRegistry.dispatch(clazz).apply(dataObject, clazz);
     }
+
+
 //    public <T> T readValue(DataObjectField dataObject, Class<T> clazz) {
 //
 //        T instance;

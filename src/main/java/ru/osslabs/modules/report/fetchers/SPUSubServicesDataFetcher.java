@@ -1,8 +1,10 @@
 package ru.osslabs.modules.report.fetchers;
 
+import javaslang.control.Option;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.ExternalDataSource;
+import ru.osslabs.model.datasource.IData;
 import ru.osslabs.modules.report.reflections.ObjectMapper;
 import ru.osslabs.modules.report.domain.spu.SubService2;
 import ru.osslabs.modules.report.domain.spu.SubServices;
@@ -31,10 +33,10 @@ public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServ
         Integer serviceId = 2187;
         List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
 
-        subServices.stream().map((dataObject) -> {
+        List<SubServices> objs = subServices.stream().map((dataObject) -> {
             DataObjectField dof = new DataObjectField();
             dof.setValue(dataObject);
-            return new ObjectMapper().readValue(dof, SubServices.class, Object.class);
+            return new ObjectMapper().readValue(dataObject, SubServices.class, SubServices.class);
         }).collect(toList());
 //        Object obj = new ObjectMapper().readValue(subServices, SubServices.class, Object.class);
 //        List<SubServices> subServicesList = subServices.stream().map(e -> new ObjectMapper().readValue(e, SubServices.class)).collect(Collectors.toList());
