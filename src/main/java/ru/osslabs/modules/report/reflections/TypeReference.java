@@ -2,8 +2,6 @@ package ru.osslabs.modules.report.reflections;
 
 import com.fasterxml.jackson.core.type.ResolvedType;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
@@ -17,19 +15,19 @@ import java.lang.reflect.Type;
  * Usage is by sub-classing: here is one way to instantiate reference
  * to generic type <code>List&lt;Integer&gt;</code>:
  * <pre>
- *  TypeReference ref = new TypeReference&lt;List&lt;Integer&gt;&gt;() { };
+ *  ReferenceSupplier ref = new ReferenceSupplier&lt;List&lt;Integer&gt;&gt;() { };
  * </pre>
- * which can be passed to methods that accept TypeReference, or resolved
+ * which can be passed to methods that accept ReferenceSupplier, or resolved
  * using <code>TypeFactory</code> to obtain {@link ResolvedType}.
  */
-public abstract class TypeReference<T> {
+public abstract class TypeReference<T> implements ReferenceSupplier<T> {
     protected final Type type;
 //    protected Constructor<?> constructor;
 
     protected TypeReference() {
         Type superClass = getClass().getGenericSuperclass();
         if (superClass instanceof Class<?>) { // sanity check, should never happen
-            throw new IllegalArgumentException("Internal error: TypeReference constructed without actual type information");
+            throw new IllegalArgumentException("Internal error: ReferenceSupplier constructed without actual type information");
         }
 
         type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
@@ -47,10 +45,11 @@ public abstract class TypeReference<T> {
 //        }
 //        return (T) constructor.newInstance();
 //    }
-
+    @Override
     public Type getType() {
         return type;
     }
+
 
     /**
      * This fabric should use for types which it isn't parametrized
@@ -58,28 +57,18 @@ public abstract class TypeReference<T> {
      * @param <T>
      * @return
      */
-    public static <T> TypeReference<T> referenceFabric(Class<T> cls) {
-        return new TypeReference<T>() {
-            @Override
-            public Type getType() {
-                return cls;
-            }
-        };
+    public static <T> ReferenceSupplier<T> referenceFabric(Class<T> cls) {
+        return () -> cls;
     }
 
     /**
      * This fabric should use for types which it is parametrized
-     * @param cls
+     * @param type
      * @param <T>
      * @return
      */
-    public static <T> TypeReference<T> referenceFabric(Type cls) {
-        return new TypeReference<T>() {
-            @Override
-            public Type getType() {
-                return cls;
-            }
-        };
+    public static <T> ReferenceSupplier<T> referenceFabric(Type type) {
+        return () -> type;
     }
 }
 

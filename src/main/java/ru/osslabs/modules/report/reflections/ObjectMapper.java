@@ -1,20 +1,10 @@
 package ru.osslabs.modules.report.reflections;
 
-import javaslang.Function2;
 import javaslang.control.Option;
-import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
-import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.IData;
-import ru.osslabs.modules.report.CMDBuildField;
-import ru.osslabs.modules.report.domain.spu.SubServices;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
-import java.util.function.Function;
-
-import static ru.osslabs.modules.report.reflections.ObjectUtils.actualFieldName;
 
 /**
  * Created by ikuchmin on 23.11.15.
@@ -50,7 +40,7 @@ public class ObjectMapper {
      * @param <T>
      * @return
      */
-    public <T> Option<T> readValue(IData dataObject, TypeReference<? extends T> clazz, Class<T> cls) {
+    public <T> Option<T> readValue(IData dataObject, ReferenceSupplier<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
         return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz));
@@ -63,14 +53,14 @@ public class ObjectMapper {
      * @return
      * @throws NoSuchElementException
      */
-    public <T> T readValue(DataObject dataObject, TypeReference<? extends T> clazz, Class<T> cls) {
+    public <T> T readValue(DataObject dataObject, ReferenceSupplier<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
         return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz)).get();
     }
 
 
-//    public <T> Option<T> readValue(IData dataObject, TypeReference<? extends T> clazz) {
+//    public <T> Option<T> readValue(IData dataObject, ReferenceSupplier<? extends T> clazz) {
 //        Objects.requireNonNull(dataObject, "DataObject wouldn't null");
 //        return objectRegistry.<T>dispatch(clazz.getType()).apply(dataObject, clazz);
 //    }

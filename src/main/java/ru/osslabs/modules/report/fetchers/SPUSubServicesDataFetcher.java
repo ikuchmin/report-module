@@ -1,21 +1,19 @@
 package ru.osslabs.modules.report.fetchers;
 
-import javaslang.control.Option;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.ExternalDataSource;
-import ru.osslabs.model.datasource.IData;
 import ru.osslabs.modules.report.reflections.ObjectMapper;
 import ru.osslabs.modules.report.domain.spu.SubService2;
 import ru.osslabs.modules.report.domain.spu.SubServices;
 import ru.osslabs.modules.report.functions.Fetcher;
+import ru.osslabs.modules.report.reflections.ReferenceSupplier;
 import ru.osslabs.modules.report.reflections.TypeReference;
 import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;

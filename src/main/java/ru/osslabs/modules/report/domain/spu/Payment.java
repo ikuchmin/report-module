@@ -1,11 +1,14 @@
 package ru.osslabs.modules.report.domain.spu;
 
+import ru.osslabs.modules.report.CMDBuildField;
+
 import java.util.List;
 
 /**
  * Created by ikuchmin on 23.11.15.
  */
 public class Payment {
+    @CMDBuildField(name = "Description")
     private String description;
     private Integer sizepayment;
     private String sizepaymentUnit;

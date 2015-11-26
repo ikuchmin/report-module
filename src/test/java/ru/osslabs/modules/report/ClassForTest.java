@@ -1,35 +1,12 @@
 package ru.osslabs.modules.report;
 
-import javaslang.collection.Stream;
-import javaslang.control.Option;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.junit.Test;
-import ru.osslabs.modules.report.decorators.BetweenDateReport;
-import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
-import ru.osslabs.modules.report.decorators.DestinationPathReport;
-import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.factories.sed.ddunaev.SecondReportToOutputStream;
-import ru.osslabs.modules.report.reflections.TypeReference;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
 
 //import org.jooq.lambda.Seq;
 //import java.util.stream.Stream;

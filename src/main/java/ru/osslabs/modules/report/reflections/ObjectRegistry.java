@@ -2,7 +2,6 @@ package ru.osslabs.modules.report.reflections;
 
 import javaslang.Function2;
 import javaslang.control.Option;
-import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.IData;
 
 /**
@@ -16,5 +15,5 @@ public interface ObjectRegistry {
      * @param <T>
      * @return
      */
-    <T> Function2<IData, TypeReference<? extends T>, Option<T>> dispatch(Class<?> cls);
+    <T> Function2<IData, ReferenceSupplier<? extends T>, Option<T>> dispatch(Class<?> cls);
 }
