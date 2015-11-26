@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static ru.osslabs.modules.report.reflections.ObjectUtils.actualFieldName;
 import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
+import static ru.osslabs.modules.report.reflections.ObjectUtils.getRawType;
 
 /**
  * Created by ikuchmin on 24.11.15.
@@ -32,10 +33,8 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
      */
     @Override
     public T build(DataObject dataObject, ReferenceSupplier<? extends T> typeRef) {
-        Type type = typeRef.getType();
-        Class<?> rawType = type instanceof Class<?>
-                ? (Class<?>) type
-                : (Class<?>) ((ParameterizedType) type).getRawType();
+
+        Class<?> rawType = getRawType(typeRef);
 
         Object instance;
         try {
