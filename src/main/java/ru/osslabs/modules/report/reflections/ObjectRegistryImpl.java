@@ -19,7 +19,7 @@ import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
  * Created by ikuchmin on 24.11.15.
  */
 public class ObjectRegistryImpl implements ObjectRegistry {
-    private Map<Class<?>, Function2<IData, Class<?>, Option<?>>> factoryMethods;
+    private Map<Class<?>, Function2<IData, TypeReference<?>, Option<?>>> factoryMethods;
 
     public ObjectRegistryImpl() {
         factoryMethods = new HashMap<>();
@@ -39,13 +39,14 @@ public class ObjectRegistryImpl implements ObjectRegistry {
 
 
     /**
-     * Method can return null.
+     * Method can return null if Object.class wasn't got registry.
+     * if type don't find method should be used Object.class.
      * @param cls
      * @param <T>
      * @return
      */
     @Override
-    public <T> Function2<IData, Class<? extends T>, Option<T>> dispatch(Class<?> cls) {
-        return cast(factoryMethods.get(cls));
+    public <T> Function2<IData, TypeReference<? extends T>, Option<T>> dispatch(Class<?> cls) {
+        return cast(Option.of(factoryMethods.get(cls)).orElseGet(() ->factoryMethods.get(Object.class)));
     }
 }

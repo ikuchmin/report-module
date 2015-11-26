@@ -50,7 +50,7 @@ public class ObjectMapper {
      * @param <T>
      * @return
      */
-    public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz, Class<T> cls) {
+    public <T> Option<T> readValue(IData dataObject, TypeReference<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
         return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz));
@@ -63,17 +63,17 @@ public class ObjectMapper {
      * @return
      * @throws NoSuchElementException
      */
-    public <T> T readValue(DataObject dataObject, Class<? extends T> clazz, Class<T> cls) {
+    public <T> T readValue(DataObject dataObject, TypeReference<? extends T> clazz, Class<T> cls) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
         return Option.of(objectRegistry.<T>dispatch(cls))
                 .flatMap((fn) -> fn.apply(dataObject, clazz)).get();
     }
 
 
-    public <T> Option<T> readValue(IData dataObject, Class<? extends T> clazz) {
-        Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        return objectRegistry.<T>dispatch(clazz).apply(dataObject, clazz);
-    }
+//    public <T> Option<T> readValue(IData dataObject, TypeReference<? extends T> clazz) {
+//        Objects.requireNonNull(dataObject, "DataObject wouldn't null");
+//        return objectRegistry.<T>dispatch(clazz.getType()).apply(dataObject, clazz);
+//    }
 
 
 //    public <T> T readValue(DataObjectField dataObject, Class<T> clazz) {

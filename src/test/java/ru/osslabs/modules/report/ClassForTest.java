@@ -10,6 +10,7 @@ import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
 import ru.osslabs.modules.report.decorators.DestinationPathReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.factories.sed.ddunaev.SecondReportToOutputStream;
+import ru.osslabs.modules.report.reflections.TypeReference;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -26,6 +27,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
 
 //import org.jooq.lambda.Seq;
@@ -74,26 +77,16 @@ public class ClassForTest {
         List<String> str;
     }
 
-    public static void method(List<?> lst) {
-        System.out.println(((ParameterizedType)lst.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0]);
+    public static <T> Class<T> method1(List<T> lst) {
+        return ((Class<T>) ((ParameterizedType) lst.getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
     }
+
+    public static <T> void method(List<T> lst) {
+        System.out.println(((ParameterizedType)lst.getClass().getGenericSuperclass()).getActualTypeArguments()[0]);
+    }
+
     @Test
     public void testReflection() throws Exception {
-        method(new ArrayList<AZ>());
-//        Option<Type> expectedClass =
-//        Stream.ofAll(AZ.class.getDeclaredFields())
-//                .flatMap((f) -> f.getType().getGenericInterfaces())
-//                .forEach(System.out::println);
-
-
-//        Type[] genericInterfaces = type.getClass().getGenericInterfaces();
-//                Stream.ofAll([1])
-//                .forEach(System.out::println);
-//                .map((in) -> (ParameterizedType) in)
-//                .filter((in) -> in.getRawType() == List.class)
-//                .map((in) -> in.getActualTypeArguments()[1])
-//                .headOption();
-//
-//        System.out.println(genericInterfaces);
+        System.out.println(method1(new ArrayList<String>()));
     }
 }

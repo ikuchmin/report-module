@@ -13,11 +13,11 @@ import java.util.function.Function;
  */
 public interface ObjectFactory<T> {
 
-    T build(DataObject dataObject, Class<? extends T> type);
+    T build(DataObject dataObject, TypeReference<? extends T> typeRef);
 
-    T build(List<DataObject> dataObjectList, Class<? extends T> type);
+    T build(List<DataObject> dataObjectList, TypeReference<? extends T> typeRef);
 
-    T build(DataObject[] dataObjects, Class<? extends T> type);
+    T build(DataObject[] dataObjects, TypeReference<? extends T> typeRef);
 
-    T build(Object dataObjects, Class<? extends T> type);
+    T build(Object dataObjects, TypeReference<? extends T> typeRef);
 }

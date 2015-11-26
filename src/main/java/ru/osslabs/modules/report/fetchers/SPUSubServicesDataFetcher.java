@@ -9,6 +9,7 @@ import ru.osslabs.modules.report.reflections.ObjectMapper;
 import ru.osslabs.modules.report.domain.spu.SubService2;
 import ru.osslabs.modules.report.domain.spu.SubServices;
 import ru.osslabs.modules.report.functions.Fetcher;
+import ru.osslabs.modules.report.reflections.TypeReference;
 import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
@@ -36,7 +37,7 @@ public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServ
         List<SubServices> objs = subServices.stream().map((dataObject) -> {
             DataObjectField dof = new DataObjectField();
             dof.setValue(dataObject);
-            return (SubServices) new ObjectMapper().readValue(dataObject, SubServices.class, Object.class);
+            return (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class);
         }).collect(toList());
 //        Object obj = new ObjectMapper().readValue(subServices, SubServices.class, Object.class);
 //        List<SubServices> subServicesList = subServices.stream().map(e -> new ObjectMapper().readValue(e, SubServices.class)).collect(Collectors.toList());
