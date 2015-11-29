@@ -3,7 +3,6 @@ package ru.osslabs.modules.report.reflections;
 import javaslang.control.Option;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.IData;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -57,7 +56,7 @@ public class ObjectMapper {
      */
     public <T> Option<T> readValue(IData dataObject, ReferenceSupplier<? extends T> typeRef) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -70,6 +69,6 @@ public class ObjectMapper {
      */
     public <T> T readValue(IData dataObject, Class<T> clazz) {
         Objects.requireNonNull(dataObject, "DataObject wouldn't null");
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 }

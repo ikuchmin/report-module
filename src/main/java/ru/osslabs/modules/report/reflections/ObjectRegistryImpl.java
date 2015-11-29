@@ -42,15 +42,14 @@ public class ObjectRegistryImpl implements ObjectRegistry {
                 .map(v -> Boolean.valueOf(cast(v))));
     }
 
-
-    /**
-     * Method can return null if Object.class wasn't got registry.
-     * if type don't find method should be used Object.class.
-     *
-     * @param cls
-     * @param <T>
-     * @return
-     */
+        /**
+         * Method can return null if Object.class wasn't got registry.
+         * if type don't find method should be used Object.class.
+         *
+         * @param cls
+         * @param <T>
+         * @return
+         */
     @Override
     public <T> Function2<IData, ReferenceSupplier<? extends T>, Option<T>> dispatch(Class<?> cls) {
         return cast(Option.of(factoryMethods.get(cls)).orElseGet(() -> factoryMethods.get(Object.class)));

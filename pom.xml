@@ -14,6 +14,59 @@
     <artifactId>report-module</artifactId>
     <version>0.0.6-SNAPSHOT</version>
     <packaging>jar</packaging>
+    <profiles>
+        <profile>
+            <id>lombok</id>
+            <properties>
+                <src.dir>target/generated-sources/delombok</src.dir>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok-maven-plugin</artifactId>
+                        <version>1.16.6.1</version>
+                        <executions>
+                            <execution>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>delombok</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <sourceDirectory>src/main/java</sourceDirectory>
+                            <addOutputDirectory>false</addOutputDirectory>
+                            <formatPreferences>
+                                <javaLangAsFQN>skip</javaLangAsFQN>
+                            </formatPreferences>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <id>lombok-clean</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>clean</goal>
+                                </goals>
+                                <configuration>
+                                    <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                                    <filesets>
+                                        <fileset>
+                                            <directory>${src.dir}</directory>
+                                        </fileset>
+                                    </filesets>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <properties>
         <platform.version>1.0-SNAPSHOT</platform.version>
@@ -23,6 +76,11 @@
         <build.number.manifest>${project.version}-${build.number}</build.number.manifest>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <git.commit>manual</git.commit>
+        <git.url>manual</git.url>
+        <git.branch>manual</git.branch>
+        <src.dir>src/main/java</src.dir>
+        <!--<lombok.sourceDirectory>${project.basedir}/src/main/java/ru/osslabs/modules/report/domain</lombok.sourceDirectory>-->
     </properties>
 
     <distributionManagement>
@@ -46,6 +104,7 @@
     </scm>
 
     <build>
+        <sourceDirectory>${src.dir}</sourceDirectory>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
