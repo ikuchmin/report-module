@@ -6,6 +6,7 @@ import ru.osslabs.modules.report.ReportBuilder;
 import ru.osslabs.modules.report.ReportFactory;
 import ru.osslabs.modules.report.ReportParameter;
 import ru.osslabs.modules.report.decorators.BetweenDateReport;
+import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.spu.SubServices;
 import ru.osslabs.modules.report.engines.JUniPrintEngine;
@@ -25,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class FirstSPUReportToOutputStream<T extends Report> implements ReportFactory<T, Void> {
+public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport> implements ReportFactory<T, Void> {
 
     @Inject
     private Fetcher<Report, Stream<SubServices>> spuDataFetcher;
@@ -62,8 +63,8 @@ public class FirstSPUReportToOutputStream<T extends Report> implements ReportFac
     public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
                 .compose(spuDataFetcher)
-                .transform((e, d) -> null)
-                .compile((e, d) -> null)
-                .publish((e, d) -> null);
+                .transform(HSSFWorkbookTransformers::fromStreamSubServicesToHSSFWorkbook)
+                .compile((re, b) -> b)
+                .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
     }
 }

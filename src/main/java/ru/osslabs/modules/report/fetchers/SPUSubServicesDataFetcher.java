@@ -32,10 +32,7 @@ public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServ
         Integer serviceId = 2187;
         List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
 
-        return subServices.stream().map((dataObject) -> {
-            DataObjectField dof = new DataObjectField();
-            dof.setValue(dataObject);
-            return (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class);
-        });
+        return subServices.stream().map((dataObject) ->
+                (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class));
     }
 }

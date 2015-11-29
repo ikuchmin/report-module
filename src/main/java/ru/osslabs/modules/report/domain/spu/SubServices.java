@@ -37,7 +37,7 @@ public class SubServices {
     private List<Rejection> rejection_noAct;
     private Integer suspension_days;
     @CMDBuildField(name = "FormSuspension_days")
-    private String formSuspension_days;
+    private Lookup<String> formSuspension_days;
     //    private LOOKUP havePayment;
     private List<Payment> subservice_Payment2;
     private Boolean lichnoVOrgan;

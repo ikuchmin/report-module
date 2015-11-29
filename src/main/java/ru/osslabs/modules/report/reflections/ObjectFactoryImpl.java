@@ -49,10 +49,10 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
             field.setAccessible(true);
             Map<String, DataObjectField> dFields = dataObject.getFields();
             Option.of(objectRegistry.dispatch(field.getType())) // TODO: При поиске метода построения объекта необходимо использовать его иерархию. По аналогии с бинами
-                    .map((func) -> func.apply(dFields.get(actualFieldName(field)), field::getGenericType))
-                    .peek((val) -> val.peek((v) -> Try.run(() -> field.set(instance, v)).onFailure(e -> {
+                    .flatMap((func) -> func.apply(dFields.get(actualFieldName(field)), field::getGenericType)) // TODO: Сделать обработку в случае получения Exception. Добовлять наименование поля, которое планировалось получить
+                    .peek((v) -> Try.run(() -> field.set(instance, v)).onFailure(e -> {
                         throw new RuntimeException("Field with name " + field.getName() + " isn't set", e);
-                    })));
+                    }));
         }
         return cast(instance);
     }
