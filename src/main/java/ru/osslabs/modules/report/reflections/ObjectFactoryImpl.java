@@ -1,25 +1,23 @@
 package ru.osslabs.modules.report.reflections;
 
-import javaslang.control.Option;
+import javaslang.collection.Stream;
 import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
-import static ru.osslabs.modules.report.reflections.ObjectUtils.actualFieldName;
-import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
-import static ru.osslabs.modules.report.reflections.ObjectUtils.getRawType;
+import static ru.osslabs.modules.report.reflections.ObjectUtils.*;
 
 /**
  * Created by ikuchmin on 24.11.15.
  */
 public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
+
+    private static Logger log = Logger.getLogger(ObjectFactoryImpl.class.getName());
 
     public ObjectFactoryImpl(ObjectRegistry objectRegistry) {
         super(objectRegistry);
@@ -27,6 +25,7 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
 
     /**
      * I should check this builder on Parametrized Types
+     *
      * @param dataObject
      * @param typeRef
      * @return
@@ -45,15 +44,24 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
             throw new RuntimeException("Instance don't get from constructor", e);
         }
 
-        for (Field field : rawType.getDeclaredFields()) {
-            field.setAccessible(true);
-            Map<String, DataObjectField> dFields = dataObject.getFields();
-            Option.of(objectRegistry.dispatch(field.getType())) // TODO: При поиске метода построения объекта необходимо использовать его иерархию. По аналогии с бинами
-                    .flatMap((func) -> func.apply(dFields.get(actualFieldName(field)), field::getGenericType)) // TODO: Сделать обработку в случае получения Exception. Добовлять наименование поля, которое планировалось получить
-                    .peek((v) -> Try.run(() -> field.set(instance, v)).onFailure(e -> {
-                        throw new RuntimeException("Field with name " + field.getName() + " isn't set", e);
-                    }));
-        }
+        Map<String, DataObjectField> dFields = dataObject.getFields();
+        Stream.ofAll(rawType.getDeclaredFields()).forEach(f ->
+                Try.of(() -> objectRegistry.dispatch(f.getType()))
+                        .filter(v -> v != null)
+                        .onFailure((e) -> log.warning(() -> "Function dispatcher for object with type ".concat(f.getType().getTypeName())
+                                .concat(" not found.")
+                                .concat(" Message: ").concat(e.getMessage())))
+                        .flatMap(fn -> fn.apply(dFields.get(actualFieldName(f)), f::getGenericType))
+                        .andThen(v -> {
+                            f.setAccessible(true);
+                            f.set(instance, v);
+                        })
+                        .onFailure(e -> log.warning(() -> "Field with name "
+                                .concat(f.getName()).concat(" isn't set")
+                                .concat(" Factory type: ").concat(f.getGenericType().getTypeName()).concat(".")
+                                .concat(" Parent object description in CMDBuild: ").concat(dFields.get("Description").getValue().toString()).concat(".")
+                                .concat(" Message error: ").concat(e.getMessage()))));
+
         return cast(instance);
     }
 
@@ -64,6 +72,11 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
 
     @Override
     public T build(DataObject[] dataObjects, ReferenceSupplier<? extends T> typeRef) {
+        return null;
+    }
+
+    @Override
+    public T build(NullableObject nullableObject, ReferenceSupplier<? extends T> typeRef) {
         return null;
     }
 

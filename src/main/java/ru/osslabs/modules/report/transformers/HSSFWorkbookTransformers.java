@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static javaslang.collection.Stream.ofAll;
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 
 /**
@@ -88,61 +89,60 @@ public class HSSFWorkbookTransformers {
                     .addCellWithValue(Option.of(ss.getPeriodSubservice_ExTerr())
                             .map((val) -> String.format("%d %s", val, ss.getFormPeriodSubservice_ExTer().getValue()))
                             .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getReject_noRecept())
-                            .filter(arr -> !arr.isEmpty())
-                            .map(arr -> arr.stream()
-                                    .map(Rejection::getDescription)
-                                    .collect(Collectors.joining("\n")))
+                    .addCellWithValue(ofAll(ss.getReject_noRecept())
+                            .map(Rejection::getDescription)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getRejection_noProv())
-                            .filter(arr -> !arr.isEmpty())
-                            .map(arr -> arr.stream()
-                                    .map(Rejection::getDescription)
-                                    .collect(Collectors.joining("\n")))
+                    .addCellWithValue(ofAll(ss.getRejection_noProv())
+                            .map(Rejection::getDescription)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getRejection_noAct())
-                            .filter(arr -> !arr.isEmpty())
-                            .map(arr -> arr.stream()
-                                    .map(Rejection::getDescription)
-                                    .collect(Collectors.joining("\n")))
+                    .addCellWithValue(ofAll(ss.getRejection_noAct())
+                            .map(Rejection::getDescription)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
                     .addCellWithValue(Option.of(ss.getSuspension_days())
                             .map((val) -> String.format("%d %s", ss.getSuspension_days(), ss.getFormSuspension_days().getValue()))
                             .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getSubservice_Payment2())
-                            .filter(arr -> !arr.isEmpty())
-                            .map(arr -> arr.stream()
-                                    .map((p) ->
-                                            String.format("%s. Размер государственной пошлины или иной платы: %d %s",
-                                                    p.getDescription(),
-                                                    p.getSizepayment(),
-                                                    p.getSizepaymentUnit().getValue()))
-                                    .collect(Collectors.joining("\n")))
+                    .addCellWithValue(ofAll(ss.getSubservice_Payment2())
+                            .map((p) ->
+                                    String.format("%s. Размер государственной пошлины или иной платы: %d %s",
+                                            p.getDescription(),
+                                            p.getSizepayment(),
+                                            p.getSizepaymentUnit().getValue()))
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getSubservice_Payment2()) // 7.2
-                            .filter(arr -> !arr.isEmpty())
-                            .map(arr -> arr.stream()
-                                    .flatMap(p -> p.getPayment_npa().stream()
-                                            .map((npa) -> String.format(
-                                                    "%s от t № %s %s орган власти, утвердивший административный регламент: %s. %s",
-                                                    Option.of(npa.getTYPE_NPA())
-                                                            .filter(lst -> !lst.isEmpty())
-                                                            .map(lst -> lst.get(0).getDescription())
-                                                            .orElse(""),
-//                                                    npa.getDateNPA(),
-                                                    npa.getNumberNPA(),
-                                                    npa.getNameNPA(),
-                                                    Option.of(npa.getOgv_NPA())
-                                                            .filter(lst -> !lst.isEmpty())
-                                                            .map(lst -> lst.get(0).getFullName())
-                                                            .orElse(""),
-                                                    p.getPointForPayment())))
-                                    .collect(Collectors.joining("\n")))
+                    .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
+                            .flatMap(p -> ofAll(p.getPayment_npa())
+                                    .map((npa) -> String.format(
+                                            "%s от %s № %s %s орган власти, утвердивший административный регламент: %s. %s",
+                                            ofAll(npa.getTYPE_NPA())
+                                                    .headOption()
+                                                    .map(NormativeType::getDescription)
+                                                    .orElse(""),
+                                            npa.getDateNPA(),
+                                            npa.getNumberNPA(),
+                                            npa.getNameNPA(),
+                                            ofAll(npa.getOgv_NPA())
+                                                    .headOption()
+                                                    .map(OgvGovernment::getFullName)
+                                                    .orElse(""),
+                                            p.getPointForPayment())))
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse("-"))
-                    .addCellWithValue(null) // 7.3
+                    .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
+                            .map(pa -> String.format(
+                                    "КБК при обращении в орган власти: %s. КБК при обращении в МФЦ: %s",
+                                    pa.getKbk_OGV(), pa.getKbk_MFC()))
+                            .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
+                            .orElse("-"))
                     .addCellWithValue(null) // 8
                     .addCellWithValue(null); // 9
         });
         return workbook;
+    }
+
+    public static String joiningNewLine(String acc, String ps) {
+        return acc.concat("\n").concat(ps);
     }
 }

@@ -1,7 +1,7 @@
 package ru.osslabs.modules.report.reflections;
 
 import javaslang.Function2;
-import javaslang.control.Option;
+import javaslang.control.Try;
 import ru.osslabs.model.datasource.IData;
 
 /**
@@ -11,9 +11,9 @@ public interface ObjectRegistry {
 
     /**
      * Method can return null.
-     * @param cls
      * @param <T>
+     * @param cls
      * @return
      */
-    <T> Function2<IData, ReferenceSupplier<? extends T>, Option<T>> dispatch(Class<?> cls);
+    <T> Function2<IData, ReferenceSupplier<? extends T>, Try<T>> dispatch(Class<?> cls);
 }

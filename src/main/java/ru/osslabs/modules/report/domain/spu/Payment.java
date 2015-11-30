@@ -18,8 +18,8 @@ public class Payment {
     private Integer sizepayment;
     private Lookup<String> sizepaymentUnit;
     private List<Normative> payment_npa;
-//    private String kbk_MFC;
-//    private String kbk_OGV;
+    private String kbk_MFC;
+    private String kbk_OGV;
     private String pointForPayment;
 //    private String payment_npa_type;
 //    private String payment_ogv_npa;
