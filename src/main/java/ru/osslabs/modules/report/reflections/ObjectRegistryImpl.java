@@ -1,9 +1,13 @@
 package ru.osslabs.modules.report.reflections;
 
 import javaslang.Function2;
+import javaslang.control.Match;
 import javaslang.control.Try;
 import ru.osslabs.Dispatcher;
+import ru.osslabs.model.datasource.DataObject;
+import ru.osslabs.model.datasource.DataObjectList;
 import ru.osslabs.model.datasource.IData;
+import ru.osslabs.modules.report.domain.CMDField;
 import ru.osslabs.modules.report.domain.Lookup;
 
 import java.util.HashMap;
@@ -32,7 +36,7 @@ public class ObjectRegistryImpl implements ObjectRegistry {
                         .concat(" Message: ").concat(e.getMessage())))
                 .map(d -> ((Dispatcher) d).dispatch(new ObjectFactoryImpl<>(this), type))
                 .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" we have problem dispatching")
-                        .concat(" or obj::getValue not was implemented Dispatcher.")
+                        .concat(" or obj::getValue was not implemented Dispatcher.")
                         .concat(" Used default value.")
                         .concat(" Message: ").concat(e.getMessage())))
                 .recover(e -> new NullableObject().dispatch(new ObjectFactoryImpl<>(this), type)));
@@ -43,6 +47,19 @@ public class ObjectRegistryImpl implements ObjectRegistry {
                 .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" obj.getValue() is null.")
                         .concat(" Message: ").concat(e.getMessage())))
                 .map(Lookup::new));
+        factoryMethods.put(CMDField.class, (obj, type) -> Try.of(() -> obj.getValue()) // Important: Don't replace on method reference. if obj is null, we get NPE ant then recover
+                .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" obj is null.")
+                        .concat(" Message: ").concat(e.getMessage())))
+                .filter(v -> v != null)
+                .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" obj.getValue() is null.")
+                        .concat(" Message: ").concat(e.getMessage())))
+                .map(v -> dispatcher(v, new CMDFieldObjectFactory<>(this), cast(type)).get())
+//                .map(d -> ((Dispatcher) d).dispatch(new CMDFieldObjectFactory<>(this), cast(type)))
+                .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" we have problem dispatching")
+                        .concat(" or obj::getValue was not implemented Dispatcher.")
+                        .concat(" Used default value.")
+                        .concat(" Message: ").concat(e.getMessage())))
+                .recover(e -> dispatcher(null, new CMDFieldObjectFactory<>(this), cast(type)).get()));
         factoryMethods.put(List.class, (obj, type) -> Try.of(() -> obj.getValue()) // Important: Don't replace on method reference. Ff obj is null, we get NPE ant then recover
                 .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" obj is null. ")
                         .concat(" Message: ").concat(e.getMessage())))
@@ -51,7 +68,7 @@ public class ObjectRegistryImpl implements ObjectRegistry {
                         .concat(" Message: ").concat(e.getMessage())))
                 .map(v -> ((Dispatcher) v).dispatch(new ListObjectFactory<>(this), cast(type)))
                 .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" we have problem dispatching")
-                        .concat(" or obj::getValue not was implemented Dispatcher.")
+                        .concat(" or obj::getValue was not implemented Dispatcher.")
                         .concat(" Used default value.")
                         .concat(" Message: ").concat(e.getMessage())))
                 .recover(e -> new NullableObject().dispatch(new ListObjectFactory<>(this), cast(type))));
@@ -90,4 +107,16 @@ public class ObjectRegistryImpl implements ObjectRegistry {
     public <T> Function2<IData, ReferenceSupplier<? extends T>, Try<T>> dispatch(Class<?> cls) {
         return cast(of(factoryMethods.get(cls)).orElseGet(() -> factoryMethods.get(Object.class)));
     }
+
+    protected <T> Match.MatchMonad<T> dispatcher(Object value, ObjectFactory<T> factory, ReferenceSupplier<? extends T> refer) {
+        return Match.of(value)
+                .whenType(DataObject.class).then(v -> factory.build(v, refer))
+                .whenType(DataObjectList.class).then(v -> factory.build(v, refer))
+                .whenType(DataObject[].class).then(v -> factory.build(v, refer))
+                .whenType(String.class).then(v -> factory.build(v, refer))
+                .whenType(Object.class).then(v -> factory.build(v, refer))
+                .otherwise(v -> factory.build(refer)); // if value is null
+
+
+    };
 }

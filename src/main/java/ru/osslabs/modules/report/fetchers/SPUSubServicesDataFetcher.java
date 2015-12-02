@@ -29,7 +29,7 @@ public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServ
     @Override
     @SuppressWarnings("unchecked")
     public Stream<SubServices> compose(Report report) {
-        Integer serviceId = 2187;
+        Integer serviceId = 4293;
         List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
 
         return subServices.stream().map((dataObject) ->

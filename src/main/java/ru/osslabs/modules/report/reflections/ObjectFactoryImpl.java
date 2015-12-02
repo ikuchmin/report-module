@@ -85,5 +85,15 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
         return null;
     }
 
+    @Override
+    public T build(String dataObject, ReferenceSupplier<? extends T> typeRef) {
+        return null;
+    }
+
+    @Override
+    public T build(ReferenceSupplier<? extends T> typeRef) {
+        return null;
+    }
+
 
 }

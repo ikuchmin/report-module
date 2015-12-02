@@ -64,4 +64,14 @@ public class ListObjectFactory<T> extends AbstractObjectFactory<List<T>> {
     public List<T> build(Object dataObjects, ReferenceSupplier<? extends List<T>> typeRef) {
         return Collections.emptyList();
     }
+
+    @Override
+    public List<T> build(String dataObject, ReferenceSupplier<? extends List<T>> typeRef) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public List<T> build(ReferenceSupplier<? extends List<T>> typeRef) {
+        return Collections.emptyList();
+    }
 }

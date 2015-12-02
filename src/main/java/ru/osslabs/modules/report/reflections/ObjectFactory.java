@@ -15,7 +15,7 @@ public interface ObjectFactory<T> {
 
     T build(DataObject[] dataObjects, ReferenceSupplier<? extends T> typeRef);
 
-    T build(NullableObject nullableObject, ReferenceSupplier<? extends T> typeRef);
+    T build(String dataObject, ReferenceSupplier<? extends T> typeRef);
 
-    T build(Object dataObjects, ReferenceSupplier<? extends T> typeRef);
+    T build(ReferenceSupplier<? extends T> typeRef);
 }

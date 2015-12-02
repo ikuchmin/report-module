@@ -1,5 +1,6 @@
 package ru.osslabs.modules.report;
 
+import javaslang.control.Match;
 import org.junit.Test;
 
 import java.lang.reflect.ParameterizedType;
@@ -16,4 +17,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class ClassForTest {
 
+    @Test
+    public void testMatch() throws Exception {
+        Object obj = new ArrayList<>();
+        Match.of(obj)
+                .whenType(List.class).then(() -> "hell")
+                .otherwise("bell").forEach(System.out::println);
+
+    }
 }

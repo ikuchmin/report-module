@@ -4,6 +4,7 @@ import javaslang.control.Option;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 
@@ -29,6 +30,11 @@ public class Row {
 
     public Row addCellWithValue(String val) {
         objectNotNull(cursor++, row::getCell, row::createCell).setCellValue(val);
+        return this;
+    }
+
+    public Row addCellWithValue(Supplier<String> val) {
+        objectNotNull(cursor++, row::getCell, row::createCell).setCellValue(val.get());
         return this;
     }
 }
