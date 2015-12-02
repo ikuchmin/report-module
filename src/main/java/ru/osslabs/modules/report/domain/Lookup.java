@@ -10,6 +10,9 @@ import lombok.Data;
 public class Lookup<T> {
     T value;
 
+    public Lookup() {
+    }
+
     public Lookup(T value) {
         this.value = value;
     }

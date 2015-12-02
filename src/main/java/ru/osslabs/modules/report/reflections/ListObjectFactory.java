@@ -3,12 +3,14 @@ package ru.osslabs.modules.report.reflections;
 import javaslang.control.Option;
 import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
+import ru.osslabs.model.datasource.MetaObject;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import static javaslang.collection.Stream.ofAll;
@@ -28,12 +30,12 @@ public class ListObjectFactory<T> extends AbstractObjectFactory<List<T>> {
 
 
     @Override
-    public List<T> build(DataObject dataObject, ReferenceSupplier<? extends List<T>> typeRef) {
+    public List<T> build(DataObject dataObject, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         return Collections.emptyList();
     }
 
     @Override
-    public List<T> build(List<DataObject> dataObjectList, ReferenceSupplier<? extends List<T>> typeRef) {
+    public List<T> build(List<DataObject> dataObjectList, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         Type typeArgument = ((ParameterizedType) typeRef.getType()).getActualTypeArguments()[0];
         return Option.of(objectRegistry.dispatch(cast(typeArgument)))
                 .map(fn -> ofAll(dataObjectList)
@@ -51,27 +53,17 @@ public class ListObjectFactory<T> extends AbstractObjectFactory<List<T>> {
     }
 
     @Override
-    public List<T> build(DataObject[] dataObjects, ReferenceSupplier<? extends List<T>> typeRef) {
+    public List<T> build(DataObject[] dataObjects, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         return Collections.emptyList();
     }
 
     @Override
-    public List<T> build(NullableObject nullableObject, ReferenceSupplier<? extends List<T>> typeRef) {
+    public List<T> build(String dataObject, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         return Collections.emptyList();
     }
 
     @Override
-    public List<T> build(Object dataObjects, ReferenceSupplier<? extends List<T>> typeRef) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<T> build(String dataObject, ReferenceSupplier<? extends List<T>> typeRef) {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<T> build(ReferenceSupplier<? extends List<T>> typeRef) {
+    public List<T> build(Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         return Collections.emptyList();
     }
 }

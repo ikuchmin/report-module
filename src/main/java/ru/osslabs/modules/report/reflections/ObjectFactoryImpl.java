@@ -4,10 +4,12 @@ import javaslang.collection.Stream;
 import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectField;
+import ru.osslabs.model.datasource.MetaObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 import static ru.osslabs.modules.report.reflections.ObjectUtils.*;
@@ -31,7 +33,7 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
      * @return
      */
     @Override
-    public T build(DataObject dataObject, ReferenceSupplier<? extends T> typeRef) {
+    public T build(DataObject dataObject, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends T> typeRef) {
 
         Class<?> rawType = getRawType(typeRef);
 
@@ -66,32 +68,22 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
     }
 
     @Override
-    public T build(List<DataObject> dataObjectList, ReferenceSupplier<? extends T> typeRef) {
+    public T build(List<DataObject> dataObjectList, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends T> typeRef) {
         return null;
     }
 
     @Override
-    public T build(DataObject[] dataObjects, ReferenceSupplier<? extends T> typeRef) {
+    public T build(DataObject[] dataObjects, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends T> typeRef) {
         return null;
     }
 
     @Override
-    public T build(NullableObject nullableObject, ReferenceSupplier<? extends T> typeRef) {
+    public T build(String dataObject, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends T> typeRef) {
         return null;
     }
 
     @Override
-    public T build(Object dataObjects, ReferenceSupplier<? extends T> typeRef) {
-        return null;
-    }
-
-    @Override
-    public T build(String dataObject, ReferenceSupplier<? extends T> typeRef) {
-        return null;
-    }
-
-    @Override
-    public T build(ReferenceSupplier<? extends T> typeRef) {
+    public T build(Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends T> typeRef) {
         return null;
     }
 

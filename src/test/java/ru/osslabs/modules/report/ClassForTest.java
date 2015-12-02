@@ -4,6 +4,9 @@ import javaslang.control.Match;
 import org.junit.Test;
 
 import java.lang.reflect.ParameterizedType;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
@@ -24,5 +27,11 @@ public class ClassForTest {
                 .whenType(List.class).then(() -> "hell")
                 .otherwise("bell").forEach(System.out::println);
 
+    }
+
+    private static Locale RUSSIAN = new Locale("ru", "RU");
+    @Test
+    public void testFormatDate() throws Exception {
+        System.out.println(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)));
     }
 }

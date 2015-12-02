@@ -14,7 +14,11 @@ import java.util.List;
 @NoArgsConstructor
 public class Normative {
     private String nameNPA;
+
+    @CMDBuildField(name = "Description")
     private String description;
+//    private Date dateNPA;
+    @CMDBuildField(name = "DateNPA")
     private Date dateNPA;
     //    private String ogv_NPA_desc;
     private List<OgvGovernment> ogv_NPA;
