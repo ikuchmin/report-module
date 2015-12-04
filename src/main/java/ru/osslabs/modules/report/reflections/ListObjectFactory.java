@@ -35,6 +35,7 @@ public class ListObjectFactory<T> extends AbstractObjectFactory<List<T>> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<T> build(List<DataObject> dataObjectList, Supplier<MetaObject> fnMetaObject, ReferenceSupplier<? extends List<T>> typeRef) {
         Type typeArgument = ((ParameterizedType) typeRef.getType()).getActualTypeArguments()[0];
         return Option.of(objectRegistry.dispatch(cast(typeArgument)))
@@ -42,7 +43,7 @@ public class ListObjectFactory<T> extends AbstractObjectFactory<List<T>> {
                         .map(dataObject -> (Try<T>) fn.apply(dataObject, referenceFabric(typeArgument)))
                         .foldLeft((List<T>) new ArrayList<>(), (acc, el) -> {
                             el.onSuccess(acc::add).onFailure(e ->
-                                    log.warning(() -> "Object don't construct. Message: ".concat(e.getMessage())));
+                                    log.warning(() -> "Object wasn't construct. Message: ".concat(e.getMessage())));
                             return acc;
                         }))
                 .orElseGet(() -> {

@@ -81,9 +81,9 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         data.forEach((ss) ->
                 Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        .addCellWithValue(String.format("%d", rowIdx.get())) // If you confuse, which number was row. Here we see rowIndx + 1 because in Row.of we saw rowIdx.getAndIncrement()
                         .addCellWithValue(Option.of(ss.getNamesubservice())
                                 .orElse(NO))
-                        .addCellWithValue("1")
                         .addCellWithValue(Option.of(ss.getPeriodsubservice())
                                 .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
                                 .orElse(NO))
@@ -92,14 +92,17 @@ public class HSSFWorkbookTransformers {
                                 .orElse(NO))
                         .addCellWithValue(ofAll(ss.getReject_noRecept())
                                 .map(Rejection::getDescription)
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse(NO))
                         .addCellWithValue(ofAll(ss.getRejection_noProv())
                                 .map(Rejection::getDescription)
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse(NO))
                         .addCellWithValue(ofAll(ss.getRejection_noAct())
                                 .map(Rejection::getDescription)
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse(NO))
                         .addCellWithValue(Option.of(ss.getSuspension_days())
@@ -107,10 +110,10 @@ public class HSSFWorkbookTransformers {
                                 .orElse(NO))
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2())
                                 .map((p) ->
-                                        String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d %s",
+                                        String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб.",
                                                 p.getDescription(),
-                                                p.getSizepayment(),
-                                                p.getSizepaymentUnit().getValue()))
+                                                p.getSizepayment()))
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse(NO))
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
@@ -130,6 +133,7 @@ public class HSSFWorkbookTransformers {
                                                         .orElse(""),
                                                 p.getPointForPayment())))
                                 .toSet()
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse("-"))
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
@@ -137,6 +141,7 @@ public class HSSFWorkbookTransformers {
                                         "КБК при обращении в орган власти: %s. КБК при обращении в МФЦ: %s",
                                         pa.getKbk_OGV(), pa.getKbk_MFC()))
                                 .toSet()
+                                .map("- "::concat)
                                 .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
                                 .orElse("-"))
                         .addCellWithValue(ofAll(
@@ -145,17 +150,16 @@ public class HSSFWorkbookTransformers {
                                         ss.getLichnoVMFC(),
                                         ss.getPortalGosUslig(),
                                         ss.getPost())
-                                        .filter(cm -> cm.getValue().filter(v -> v.equals(false)).isDefined())
-                                        .map(CMDField::getDescription)
-                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine),
+                                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                        .map(CMDField::getDescription),
                                 Option.of(ss.getOffSiteOrganaUslugi())
-                                        .filter(cm -> cm.getValue().filter(v -> v.equals(false)).isDefined())
+                                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
                                         .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAdressOffSite())),
                                 ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
                                         .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                                .filter(Option::isDefined)
                                 .flatMap(ignored -> ignored)
                                 .toSet()
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                 .orElse("-"))
                         .addCellWithValue(ofAll(  // 9
@@ -166,19 +170,18 @@ public class HSSFWorkbookTransformers {
                                         ss.getFromGosUslugInELForm(),
                                         ss.getEmailDocWithElSignature(),
                                         ss.getPostResult())
-                                        .filter(cm -> cm.getValue().filter(v -> v.equals(false)).isDefined())
-                                        .map(CMDField::getDescription)
-                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine),
+                                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
+                                        .map(CMDField::getDescription),
                                 Option.of(ss.getFromCabinetOffSite())
-                                        .filter(cm -> cm.getValue().filter(v -> v.equals(false)).isDefined())
+                                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
                                         .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteResult())),
                                 Option.of(ss.getFromOffSiteElDoc())
-                                        .filter(cm -> cm.getValue().filter(v -> v.equals(false)).isDefined())
+                                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
                                         .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteELDoc())),
                                 ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
                                         .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                                .filter(Option::isDefined)
                                 .flatMap(ignored -> ignored)
+                                .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN))));
         return workbook;

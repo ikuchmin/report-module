@@ -64,7 +64,7 @@ public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookRepo
         return (r) -> new ReportBuilder<>(r)
                 .compose(spuDataFetcher)
                 .transform(HSSFWorkbookTransformers::fromStreamSubServicesToHSSFWorkbook)
-                .compile((re, d) -> d)
+                .compile(JUniPrintEngine::compile)
                 .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
     }
 }

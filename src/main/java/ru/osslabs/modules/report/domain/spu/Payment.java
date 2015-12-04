@@ -16,7 +16,6 @@ public class Payment {
     @CMDBuildField(name = "Description")
     private String description;
     private Integer sizepayment;
-    private Lookup<String> sizepaymentUnit;
     private List<Normative> payment_npa;
     private String kbk_MFC;
     private String kbk_OGV;
