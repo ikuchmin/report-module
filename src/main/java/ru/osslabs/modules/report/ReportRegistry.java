@@ -1,6 +1,5 @@
 package ru.osslabs.modules.report;
 
-import javaslang.collection.Stream;
 import javaslang.concurrent.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -42,6 +41,7 @@ import java.util.logging.Logger;
 import static javax.ejb.ConcurrencyManagementType.BEAN;
 import static org.metawidget.inspector.InspectionResultConstants.PARAMETERIZED_TYPE;
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
+import static ru.osslabs.modules.report.reflections.ObjectUtils.cast;
 
 /**
  * Created by ikuchmin on 15.11.15.
@@ -250,7 +250,7 @@ public class ReportRegistry implements ReportsDataProvider {
                         new HSSFWorkbook(new POIFSFileSystem(new BufferedInputStream(
                                 this.getClass().getClassLoader().getResourceAsStream(
                                         reportWrappers.get(reportCode).getReportPath().toString()))))),
-                        outputStream),
+                        outputStream, cast(map.get("serviceId"))),
                 Void.class);
     }
 

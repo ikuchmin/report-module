@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.domain.spu;
+package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,15 @@ import ru.osslabs.modules.report.CMDBuildField;
  */
 @Data
 @NoArgsConstructor
-public class SubserviceResult {
+public class Rejection {
     @CMDBuildField(name = "Description")
     private String description;
+
+    public Rejection(String description) {
+        this.description = description;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

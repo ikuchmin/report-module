@@ -1,6 +1,5 @@
-package ru.osslabs.modules.report.domain.spu;
+package ru.osslabs.modules.report.spu.domain;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.osslabs.modules.report.CMDBuildField;

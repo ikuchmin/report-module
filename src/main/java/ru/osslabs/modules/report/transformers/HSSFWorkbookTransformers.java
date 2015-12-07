@@ -10,7 +10,7 @@ import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.CMDField;
-import ru.osslabs.modules.report.domain.spu.*;
+import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;

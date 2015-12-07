@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.factories.spu;
+package ru.osslabs.modules.report.spu;
 
 import javaslang.Tuple2;
 import ru.osslabs.modules.report.ExportType;
@@ -8,7 +8,7 @@ import ru.osslabs.modules.report.ReportParameter;
 import ru.osslabs.modules.report.decorators.BetweenDateReport;
 import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.domain.spu.SubServices;
+import ru.osslabs.modules.report.spu.domain.SubServices;
 import ru.osslabs.modules.report.engines.JUniPrintEngine;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.publishers.HSSFWorkBookFileStorePublisher;
@@ -26,13 +26,10 @@ import java.util.stream.Stream;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport> implements ReportFactory<T, Void> {
+public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
 
     @Inject
-    private Fetcher<Report, Stream<SubServices>> spuDataFetcher;
-
-    @Inject
-    private Fetcher<BetweenDateReport, Stream<Tuple2<String, Integer>>> sedDataFetcher;
+    private Fetcher<ServiceIdReport, Stream<SubServices>> spuDataFetcher;
 
     @Override
     public String getReportCode() {

@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.domain.spu;
+package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import ru.osslabs.modules.report.CMDBuildField;
  */
 @Data
 @NoArgsConstructor
-public class NormativeType {
-    @CMDBuildField(name = "Description")
-    private String description;
+public class OgvGovernment {
+    @CMDBuildField(name = "fullname")
+    private String fullName;
 }

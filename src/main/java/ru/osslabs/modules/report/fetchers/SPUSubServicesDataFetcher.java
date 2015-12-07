@@ -1,38 +1,50 @@
 package ru.osslabs.modules.report.fetchers;
 
+import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;
-import ru.osslabs.model.datasource.DataObjectField;
 import ru.osslabs.model.datasource.ExternalDataSource;
 import ru.osslabs.modules.report.reflections.ObjectMapper;
-import ru.osslabs.modules.report.domain.spu.SubService2;
-import ru.osslabs.modules.report.domain.spu.SubServices;
+import ru.osslabs.modules.report.spu.ServiceIdReport;
+import ru.osslabs.modules.report.spu.domain.SubServices;
 import ru.osslabs.modules.report.functions.Fetcher;
-import ru.osslabs.modules.report.reflections.ReferenceSupplier;
 import ru.osslabs.modules.report.reflections.TypeReference;
-import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class SPUSubServicesDataFetcher implements Fetcher<Report, Stream<SubServices>> {
+public class SPUSubServicesDataFetcher implements Fetcher<ServiceIdReport, Stream<SubServices>> {
 
     @Inject
-    ExternalDataSource dataSource;
+    private Logger log;
+
+    @Inject
+    private ExternalDataSource dataSource;
 
     @Override
     @SuppressWarnings("unchecked")
-    public Stream<SubServices> compose(Report report) {
-        String serviceId = "4293";
-        List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
+    public Stream<SubServices> compose(ServiceIdReport report) {
+        return Try.of(() -> dataSource.getObject("services", report.getServiceId()).getFields().get("Servicecommunication"))
+                .onFailure(e -> log.warning(() -> String.format("Service with id $s not found or reference %s isn't. Message: %s",
+                        report.getServiceId(), "Servicecommunication", e.getMessage())))
+                .filter(v -> v != null)
+                .onFailure(e -> log.warning(() -> String.format("Service with id $s not found or reference %s is null. Message: %s",
+                        report.getServiceId(), "Servicecommunication", e.getMessage())))
+                .map((dataObjectField) -> ((List<DataObject>)dataObjectField.getValue()).stream())
+                .onFailure(e -> log.warning(e::getMessage))
+                .map(ss -> ss.map((dataObject) ->
+                        (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class)))
+                .onFailure(e -> log.warning(e::getMessage))
+                .recover(e -> Stream.empty())
+                .get();
 
-        return subServices.stream().map((dataObject) ->
-                (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class));
+//        List<DataObject> subServices = (List<DataObject>)dataSource.getObject("services", serviceId).getFields().get("Servicecommunication").getValue();
+//
+//        return subServices.stream().map((dataObject) ->
+//                (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class));
     }
 }
