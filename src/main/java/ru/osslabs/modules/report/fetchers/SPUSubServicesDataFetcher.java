@@ -28,6 +28,7 @@ public class SPUSubServicesDataFetcher implements Fetcher<ServiceIdReport, Strea
     @Override
     @SuppressWarnings("unchecked")
     public Stream<SubServices> compose(ServiceIdReport report) {
+        log.info(() -> String.format("Data for compose function %s was started. ServiceId: %s", SPUSubServicesDataFetcher.class, report.getServiceId()));
         return Try.of(() -> dataSource.getObject("services", report.getServiceId()).getFields().get("Servicecommunication"))
                 .onFailure(e -> log.warning(() -> String.format("Service with id $s not found or reference %s isn't. Message: %s",
                         report.getServiceId(), "Servicecommunication", e.getMessage())))
@@ -35,10 +36,11 @@ public class SPUSubServicesDataFetcher implements Fetcher<ServiceIdReport, Strea
                 .onFailure(e -> log.warning(() -> String.format("Service with id $s not found or reference %s is null. Message: %s",
                         report.getServiceId(), "Servicecommunication", e.getMessage())))
                 .map((dataObjectField) -> ((List<DataObject>)dataObjectField.getValue()).stream())
-                .onFailure(e -> log.warning(e::getMessage))
+                .onFailure(e -> log.warning(() -> String.format("Information about subservice for serviceid %s is not avalilable. Message: %s",
+                        report.getServiceId(), e.getMessage())))
                 .map(ss -> ss.map((dataObject) ->
                         (SubServices) new ObjectMapper().readValue(dataObject, new TypeReference<SubServices>() {}, Object.class)))
-                .onFailure(e -> log.warning(e::getMessage))
+                .onFailure(e -> log.warning(() -> String.format("Object subservice was not created. Message: %s", e.getMessage())))
                 .recover(e -> Stream.empty())
                 .get();
 
