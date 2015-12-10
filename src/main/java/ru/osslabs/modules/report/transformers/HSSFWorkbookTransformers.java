@@ -15,6 +15,7 @@ import ru.osslabs.modules.report.spu.domain.*;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -41,6 +42,10 @@ public class HSSFWorkbookTransformers {
             cell.setCellValue(el);
         });
         return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromListMatrixToHSSFWorkbook(Re report, List<List<Double>> data) {
+        return fromMatrixToHSSFWorkbook(report, Matrix.of(data));
     }
 
     /**
