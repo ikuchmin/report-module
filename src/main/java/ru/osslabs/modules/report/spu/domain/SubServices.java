@@ -16,7 +16,8 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class SubServices {
-    //    private REFERENCE obj;
+    @CMDBuildField(name = "obj")
+    private Service service;
 //    private SPECIFICATION service;
 //    private SPECIFICATION objAppeal;
     private String namesubservice;

@@ -188,7 +188,11 @@ public class HSSFWorkbookTransformers {
                                 .flatMap(ignored -> ignored)
                                 .map("- "::concat)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
-                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN))));
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        .addCellWithValue(ss.getService().getDescription()));
+
+
+
         return workbook;
     }
 
