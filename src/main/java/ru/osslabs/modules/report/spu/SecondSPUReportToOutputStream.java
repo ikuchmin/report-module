@@ -1,21 +1,16 @@
 package ru.osslabs.modules.report.spu;
 
-import javaslang.Tuple2;
-import javaslang.control.Option;
 import ru.osslabs.modules.report.ExportType;
 import ru.osslabs.modules.report.ReportBuilder;
 import ru.osslabs.modules.report.ReportFactory;
 import ru.osslabs.modules.report.ReportParameter;
-import ru.osslabs.modules.report.decorators.BetweenDateReport;
 import ru.osslabs.modules.report.decorators.DestinationOutputStreamReport;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.spu.domain.Service;
-import ru.osslabs.modules.report.spu.domain.SubServices;
 import ru.osslabs.modules.report.engines.JUniPrintEngine;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.publishers.HSSFWorkBookFileStorePublisher;
+import ru.osslabs.modules.report.spu.domain.SubServices;
 import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
-import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.nio.file.Path;
@@ -28,19 +23,19 @@ import java.util.stream.Stream;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
+public class SecondSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
 
     @Inject
-    private Fetcher<ServiceIdReport, Option<Service>> spuDataFetcher;
+    private Fetcher<ServiceIdReport, Stream<SubServices>> spuDataFetcher;
 
     @Override
     public String getReportCode() {
-        return "/reports/juniprint/spu_report_1.xlt";
+        return "/reports/juniprint/spu_report_2.xlt";
     }
 
     @Override
     public Path getReportPath() {
-        return Paths.get("/reports/juniprint/spu_report_1.xlt");
+        return Paths.get("/reports/juniprint/spu_report_2.xlt");
     }
 
     @Override
@@ -62,7 +57,7 @@ public class FirstSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookRepo
     public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
                 .compose(spuDataFetcher)
-                .transform(HSSFWorkbookTransformers::fromStreamServiceToHSSFWorkbook)
+                .transform(HSSFWorkbookTransformers::fromStreamSubServicesToHSSFWorkbook)
                 .compile(JUniPrintEngine::compile)
                 .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
     }

@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static javaslang.collection.Stream.ofAll;
@@ -192,7 +193,92 @@ public class HSSFWorkbookTransformers {
                         .addCellWithValue(ss.getService().getDescription()));
 
 
+        return workbook;
+    }
 
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToHSSFWorkbook(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        String NO = "Нет";
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            //1
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Наименование органа, предоставляющего услугу")
+                    .addCellWithValue(String.format("%s",
+                            ofAll(service.getRefOrgGovemment())
+                                    .headOption()
+                                    .map(RefOrgGovemment::getFullname)
+                                    .orElse(NO)))
+                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)));
+            //2
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Номер услуги в федеральном реестре")
+                    .addCellWithValue(String.format("%s", service.getFederalNumberOfService()));
+            //3
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Полное наименование услуги")
+                    .addCellWithValue(String.format("%s", service.getNameService()));
+            //4
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Краткое наименование услуги")
+                    .addCellWithValue(String.format("%s", service.getDescription()));
+            //5
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Административный регламент предоставления государственной услуги")
+                    .addCellWithValue(ofAll(service.getARegl())
+                            .map(npa -> String.format(RUSSIAN,
+                                    "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s.",
+                                    ofAll(npa.getTYPE_NPA())
+                                            .headOption()
+                                            .map(NormativeType::getDescription)
+                                            .orElse(""),
+                                    npa.getDateNPA(),
+                                    npa.getNumberNPA(),
+                                    npa.getNameNPA(),
+                                    ofAll(npa.getOgv_NPA())
+                                            .headOption()
+                                            .map(OgvGovernment::getFullName)
+                                            .orElse("")))
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse("-"));
+            //6
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Перечень «подуслуг»")
+                    .addCellWithValue(ofAll(service.getSubServices())
+                            .map(SubServices::getNamesubservice)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse("-"));
+            //7
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    .addCellWithValue("Способы оценки качества предоставления государственной услуги")
+                    .addCellWithValue(ofAll(  // 9
+                            ofAll(service.getRadiotelephone(),
+                                    service.getTerminal(),
+                                    service.getPortalPublicServices(),
+                                    service.getSiteVashControl())
+                                    .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
+                                    .map(CMDField::getDescription),
+                            Option.of(service.getOfficialSite())
+                                    .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                    .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
+                            ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
+                            .flatMap(ignored -> ignored)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"));
+        }
         return workbook;
     }
 

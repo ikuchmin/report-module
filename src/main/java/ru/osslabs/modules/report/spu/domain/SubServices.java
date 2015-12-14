@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SubServices {
     @CMDBuildField(name = "obj")
-    private Service service;
+    private Service1 service;
 //    private SPECIFICATION service;
 //    private SPECIFICATION objAppeal;
     private String namesubservice;
