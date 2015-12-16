@@ -10,6 +10,7 @@ import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.CMDField;
+import ru.osslabs.modules.report.domain.Lookup;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -18,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static javaslang.collection.Stream.ofAll;
@@ -278,6 +279,67 @@ public class HSSFWorkbookTransformers {
                             .flatMap(ignored -> ignored)
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"));
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToFourthReport(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        final String NO = "Нет";
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            service.getSubServices().forEach(subService ->
+                    subService.getFillDocSubservice1().forEach(docDesc ->
+                            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                    //1
+                                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                                    //2
+                                    .addCellWithValue(
+                                            Option.of(docDesc.getParentDocument())
+                                            .map(Document::getDescription).orElse(NO))
+                                    //3
+                                    .addCellWithValue(
+                                            Option.of(docDesc.getDocument())
+                                            .map(Document::getDescription).orElse(NO))
+                                    //4
+                                    .addCellWithValue(
+                                            ofAll(
+                                                    Option.of(String.format("%d экз., %s", docDesc.getInstancesNumber(), docDesc.getTypeDocument().getValue())),
+                                                    ofAll(docDesc.getIdentificationApplicant(),
+                                                            docDesc.getVerificatOriginal(),
+                                                            docDesc.getRemovingCopy(),
+                                                            docDesc.getFormatCase())
+                                                            .filter(field -> field.getValue().orElse(false))
+                                                            .map(CMDField::getDescription),
+                                                    ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
+                                            )
+                                                    .flatMap(Function.identity())
+                                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
+                                    )
+                                    //5
+                                    .addCellWithValue(
+                                            ofAll(docDesc.getRefCondition())
+                                            .map(RefCondit::getRefCondition)
+                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
+                                    //6
+                                    .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
+                                    //7
+                                    //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                    .addCellWithValue(docDesc.getFormDocument().endsWith("/")?NO:"Приложено")
+                                    //8
+                                    //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                    .addCellWithValue(docDesc.getSamplemDocument().endsWith("/")?NO:"Приложено")
+                                    //9
+                                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                    //10
+                                    .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                    //11
+                                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                    )
+            );
         }
         return workbook;
     }

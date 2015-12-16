@@ -63,6 +63,8 @@ public class SubServices {
     private CMDField<Boolean> postResult;
     //    private Boolean otherMethods;
     private List<SubserviceResult> getRezultSubServices;
+    @CMDBuildField(name = "FillDocSubservice1")
+    private List<DescriptionDocumentsObslugi> fillDocSubservice1;
 //    private Boolean startDetailsApplicant;
 //    private SPECIFICATION fillDetailsApplicant;
 //    private Boolean startDocSubservice;
