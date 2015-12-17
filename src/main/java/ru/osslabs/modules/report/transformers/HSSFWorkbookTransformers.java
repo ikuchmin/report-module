@@ -291,54 +291,74 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach(subService ->
-                    subService.getFillDocSubservice1().forEach(docDesc ->
+            service.getSubServices().forEach(subService -> {
+                        if (subService.getFillDocSubservice1().isEmpty()) {
                             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                    //1
-                                    .addCellWithValue(String.format("%d", rowIdx.get()))
-                                    //2
-                                    .addCellWithValue(
-                                            Option.of(docDesc.getParentDocument())
-                                            .map(Document::getDescription).orElse(NO))
+                                    .addCellWithValue("") //1
+                                    .addCellWithValue("") //2
                                     //3
-                                    .addCellWithValue(
-                                            Option.of(docDesc.getDocument())
-                                            .map(Document::getDescription).orElse(NO))
-                                    //4
-                                    .addCellWithValue(
-                                            ofAll(
-                                                    Option.of(String.format("%d экз., %s", docDesc.getInstancesNumber(), docDesc.getTypeDocument().getValue())),
-                                                    ofAll(docDesc.getIdentificationApplicant(),
-                                                            docDesc.getVerificatOriginal(),
-                                                            docDesc.getRemovingCopy(),
-                                                            docDesc.getFormatCase())
-                                                            .filter(field -> field.getValue().orElse(false))
-                                                            .map(CMDField::getDescription),
-                                                    ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
-                                            )
-                                                    .flatMap(Function.identity())
-                                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
-                                    )
-                                    //5
-                                    .addCellWithValue(
-                                            ofAll(docDesc.getRefCondition())
-                                            .map(RefCondit::getRefCondition)
-                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
-                                    //6
-                                    .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
-                                    //7
-                                    //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                    .addCellWithValue(docDesc.getFormDocument().endsWith("/")?NO:"Приложено")
-                                    //8
-                                    //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                    .addCellWithValue(docDesc.getSamplemDocument().endsWith("/")?NO:"Приложено")
+                                    .addCellWithValue("Данные не заполнены")
+                                    .addCellWithValue("") //4
+                                    .addCellWithValue("") //5
+                                    .addCellWithValue("") //6
+                                    .addCellWithValue("") //7
+                                    .addCellWithValue("") //8
                                     //9
                                     .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                     //10
                                     .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
                                     //11
-                                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
-                    )
+                                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                        }
+                        AtomicInteger docNum = new AtomicInteger(0);
+                        subService.getFillDocSubservice1().forEach(docDesc ->
+                                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                        //1
+                                        .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
+                                        //2
+                                        .addCellWithValue(
+                                                Option.of(docDesc.getParentDocument())
+                                                        .map(Document::getDescription).orElse(NO))
+                                        //3
+                                        .addCellWithValue(
+                                                Option.of(docDesc.getDocument())
+                                                        .map(Document::getDescription).orElse(NO))
+                                        //4
+                                        .addCellWithValue(
+                                                ofAll(
+                                                        Option.of(String.format("%d экз., %s", docDesc.getInstancesNumber(), docDesc.getTypeDocument().getValue())),
+                                                        ofAll(docDesc.getIdentificationApplicant(),
+                                                                docDesc.getVerificatOriginal(),
+                                                                docDesc.getRemovingCopy(),
+                                                                docDesc.getFormatCase())
+                                                                .filter(field -> field.getValue().orElse(false))
+                                                                .map(CMDField::getDescription),
+                                                        ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
+                                                )
+                                                        .flatMap(Function.identity())
+                                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
+                                        )
+                                        //5
+                                        .addCellWithValue(
+                                                ofAll(docDesc.getRefCondition())
+                                                        .map(RefCondit::getRefCondition)
+                                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
+                                        //6
+                                        .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
+                                        //7
+                                        //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                        .addCellWithValue(docDesc.getFormDocument().endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                        //8
+                                        //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                        .addCellWithValue(docDesc.getSamplemDocument().endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                        //9
+                                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                        //10
+                                        .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                        //11
+                                        .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                        );
+                    }
             );
         }
         return workbook;
