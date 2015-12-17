@@ -10,7 +10,6 @@ import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.CMDField;
-import ru.osslabs.modules.report.domain.Lookup;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -347,10 +346,10 @@ public class HSSFWorkbookTransformers {
                                         .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
                                         //7
                                         //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                        .addCellWithValue(docDesc.getFormDocument().endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                        .addCellWithValue(Option.of(docDesc.getFormDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
                                         //8
                                         //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                        .addCellWithValue(docDesc.getSamplemDocument().endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                        .addCellWithValue(Option.of(docDesc.getSamplemDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
                                         //9
                                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                         //10
