@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.spu;
+package ru.osslabs.modules.report.spu.reports;
 
 import javaslang.control.Option;
 import ru.osslabs.modules.report.ExportType;
@@ -10,6 +10,7 @@ import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.engines.JUniPrintEngine;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.publishers.HSSFWorkBookFileStorePublisher;
+import ru.osslabs.modules.report.spu.ServiceIdReport;
 import ru.osslabs.modules.report.spu.domain.Service;
 import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
 
@@ -23,19 +24,20 @@ import java.util.function.Function;
 /**
  * Created by Serge Kozyrev on 15.12.15.
  */
-public class FourthSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
+public class SixthSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
+    private final String PATH_TO_REPORT = "/reports/juniprint/spu_report_6.xlt";
 
     @Inject
     private Fetcher<ServiceIdReport, Option<Service>> spuDataFetcher;
 
     @Override
     public String getReportCode() {
-        return "/reports/juniprint/spu_report_4.xlt";
+        return PATH_TO_REPORT;
     }
 
     @Override
     public Path getReportPath() {
-        return Paths.get("/reports/juniprint/spu_report_4.xlt");
+        return Paths.get(PATH_TO_REPORT);
     }
 
     @Override
@@ -57,7 +59,7 @@ public class FourthSPUReportToOutputStream<T extends SourceFututeHSSFWorkBookRep
     public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
                 .compose(spuDataFetcher)
-                .transform(HSSFWorkbookTransformers::fromStreamServiceToFourthReport)
+                .transform(HSSFWorkbookTransformers::fromStreamServiceToSixthReport)
                 .compile(JUniPrintEngine::compile)
                 .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
     }

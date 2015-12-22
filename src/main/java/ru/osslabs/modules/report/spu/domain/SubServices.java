@@ -16,8 +16,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class SubServices {
-    @CMDBuildField(name = "obj")
-    private Service1 service;
+    //    private REFERENCE obj;
 //    private SPECIFICATION service;
 //    private SPECIFICATION objAppeal;
     private String namesubservice;
@@ -65,6 +64,9 @@ public class SubServices {
     private List<SubserviceResult> getRezultSubServices;
     @CMDBuildField(name = "FillDocSubservice1")
     private List<DescriptionDocumentsObslugi> fillDocSubservice1;
+    @CMDBuildField(name = "FillResultSubservice1")
+    private List<DescripDocResult> fillResultSubservice1;
+
 //    private Boolean startDetailsApplicant;
 //    private SPECIFICATION fillDetailsApplicant;
 //    private Boolean startDocSubservice;
