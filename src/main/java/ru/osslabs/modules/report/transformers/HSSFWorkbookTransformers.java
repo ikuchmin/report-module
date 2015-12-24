@@ -18,6 +18,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -353,7 +354,7 @@ public class HSSFWorkbookTransformers {
                                         .addCellWithValue(Option.of(docDesc.getFormDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
                                         //8
                                         //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                        .addCellWithValue(Option.of(docDesc.getSamplemDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                        .addCellWithValue(Option.of(docDesc.getSampleDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
                                         //9
                                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                         //10
@@ -466,7 +467,7 @@ public class HSSFWorkbookTransformers {
                                                     Option.of(resDesc)
                                                             .filter(result ->
                                                                     result.getNumberOfDays() != null &&
-                                                                    result.getUnitOfMeasure1() != null)
+                                                                            result.getUnitOfMeasure1() != null)
                                                             .map(result -> String.format("%s %s",
                                                                     result.getNumberOfDays(),
                                                                     result.getUnitOfMeasure1().getValue()))
@@ -492,6 +493,124 @@ public class HSSFWorkbookTransformers {
                                 }
                         );
                     }
+            );
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToEighthReport(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        final String NO = "Нет";
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            service.getSubServices().forEach(subService ->
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                            //1
+                            .addCellWithValue("")
+                            //2
+                            .addCellWithValue(ofAll(
+                                    Option.of(subService.getOfficialWebsite())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
+                                    Option.of(subService.getPortalStateServices())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getOtherInformaTerms())
+                                            .filter(Objects::nonNull)
+                                            .map(ProductInformatSubser::getOtherWays)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //3
+                            .addCellWithValue(ofAll(
+                                    Option.of(subService.getOfficialWebsite())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
+                                    Option.of(subService.getPortalStateSrvices())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getMethoAppointBodies())
+                                            .filter(Objects::nonNull)
+                                            .map(OtheMethoAppointm::getOtherMethodAppointment)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //4
+                            .addCellWithValue(ofAll(
+                                    ofAll(
+                                            subService.getRequirPapeDocuments(),
+                                            subService.getRequireDocumenPaper(),
+                                            subService.getSubmiDocObtaiResult())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getOtherReception())
+                                            .filter(Objects::nonNull)
+                                            .map(WayReceptRequest::getOthRecRegisteringDocuments)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //5
+                            .addCellWithValue(ofAll(
+                                    Option.of(subService.getOfficialWebProvidiService())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddrePayMethods())),
+                                    Option.of(subService.getPublServPayMeth())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getOtheMethoPaymStaFee())
+                                            .filter(Objects::nonNull)
+                                            .map(OtheMethodPaymen::getMethoPymeStatFee)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //6
+                            .addCellWithValue(ofAll(
+                                    Option.of(subService.getOfficlWebMetInform())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddresInformation())),
+                                    ofAll(subService.getServicePortaInformation(),
+                                            subService.getEmailApplicant())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getOthMeInforAboCourse())
+                                            .filter(Objects::nonNull)
+                                            .map(MethObtProgresInfo::getObtaInfoProgRequest)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //7
+                            .addCellWithValue(ofAll(
+                                    Option.of(subService.getOfficlWebCompla())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(v -> String.format("Адрес сайта: %s", subService.getAddresComplaint())),
+                                    ofAll(subService.getServicPortComplaints(),
+                                            subService.getInfoSystEnsurDecisions())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                    ofAll(subService.getOthFlinComplaint())
+                                            .filter(Objects::nonNull)
+                                            .map(OthWayFiliComplaint::getWayFilinComplaint)
+                                            .filter(Objects::nonNull))
+                                    .flatMap(identity())
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                    .orElse(NO))
+                            //8
+                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                            //9
+                            .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                            //10
+                            .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                            //11
+                            .addCellWithValue(String.format("%d", rowIdx.get()))
+
             );
         }
         return workbook;

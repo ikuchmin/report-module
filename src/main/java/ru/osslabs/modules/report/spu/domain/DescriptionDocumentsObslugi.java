@@ -41,7 +41,7 @@ public class DescriptionDocumentsObslugi {
     @CMDBuildField(name = "FormDocument")
     private String formDocument;
     @CMDBuildField(name = "SampleDocument")
-    private String samplemDocument;
+    private String sampleDocument;
 
 
 }
