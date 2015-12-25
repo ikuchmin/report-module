@@ -12,6 +12,7 @@ import java.util.List;
  */
 @Data
 public class DescriptionDocumentsObslugi {
+    private CMDField<Boolean> beResult;
     @CMDBuildField(name = "Description")
     private String description;
     @CMDBuildField(name = "Documents3")
@@ -43,7 +44,27 @@ public class DescriptionDocumentsObslugi {
     @CMDBuildField(name = "SampleDocument")
     private String sampleDocument;
 
-
+    @CMDBuildField(name = "Requirements")
+    private String requirements;
+    private Lookup<String> characterOfResult;
+    private CMDField<Boolean> terrOrgOnPaper;
+    private CMDField<Boolean> inMFConPaperFrom;
+    private CMDField<Boolean> inMFCinDocFromITOrg;
+    private CMDField<Boolean> fromCabinetGosUslug;
+    private CMDField<Boolean> fromGosUslugInELForm;
+    private CMDField<Boolean> fromCabinetOffSite;
+    private String addresOffSiteResult;
+    private CMDField<Boolean> fromOffSiteElDoc;
+    private String addresOffSiteELDoc;
+    private CMDField<Boolean> emailDocWithElSignature;
+    private CMDField<Boolean> postResult;
+    private List<SubserviceResult> getRezultSubServices;
+    private Integer numberOfDays;
+    private Lookup<String> unitOfMeasure1;
+    private Integer numOfDays;
+    private Lookup<String> unitOfMeas1;
+    private String docForm;
+    private String docExample;
 }
 
 

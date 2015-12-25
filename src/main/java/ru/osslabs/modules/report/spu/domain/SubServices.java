@@ -64,8 +64,8 @@ public class SubServices {
     private List<SubserviceResult> getRezultSubServices;
     @CMDBuildField(name = "FillDocSubservice1")
     private List<DescriptionDocumentsObslugi> fillDocSubservice1;
-    @CMDBuildField(name = "FillResultSubservice1")
-    private List<DescripDocResult> fillResultSubservice1;
+    @CMDBuildField(name = "FillResultSubservice2")
+    private List<DescriptionDocumentsObslugi> fillResultSubservice2;
     @CMDBuildField(name = "OfficialWebsite")
     private CMDField<Boolean> officialWebsite;
     @CMDBuildField(name = "WebAddress")

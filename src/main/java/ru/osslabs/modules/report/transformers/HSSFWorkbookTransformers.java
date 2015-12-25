@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
 import static javaslang.collection.Stream.ofAll;
 import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
 
@@ -296,7 +297,9 @@ public class HSSFWorkbookTransformers {
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
             service.getSubServices().forEach(subService -> {
-                        if (subService.getFillDocSubservice1().isEmpty()) {
+                        List<DescriptionDocumentsObslugi> subServiceInputDocs = subService.getFillDocSubservice1().stream()
+                                .collect(toList());
+                        if (subServiceInputDocs.isEmpty()) {
                             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                                     .addCellWithValue("") //1
                                     .addCellWithValue("") //2
@@ -313,55 +316,56 @@ public class HSSFWorkbookTransformers {
                                     .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
                                     //11
                                     .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                        } else {
+                            AtomicInteger docNum = new AtomicInteger(0);
+                            subServiceInputDocs.forEach(docDesc ->
+                                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                            //1
+                                            .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
+                                            //2
+                                            .addCellWithValue(
+                                                    Option.of(docDesc.getParentDocument())
+                                                            .map(Document::getDescription).orElse(NO))
+                                            //3
+                                            .addCellWithValue(
+                                                    Option.of(docDesc.getDocument())
+                                                            .map(Document::getDescription).orElse(NO))
+                                            //4
+                                            .addCellWithValue(
+                                                    ofAll(
+                                                            Option.of(String.format("%d экз., %s", docDesc.getInstancesNumber(), docDesc.getTypeDocument().getValue())),
+                                                            ofAll(docDesc.getIdentificationApplicant(),
+                                                                    docDesc.getVerificatOriginal(),
+                                                                    docDesc.getRemovingCopy(),
+                                                                    docDesc.getFormatCase())
+                                                                    .filter(field -> field.getValue().orElse(false))
+                                                                    .map(CMDField::getDescription),
+                                                            ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
+                                                    )
+                                                            .flatMap(identity())
+                                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
+                                            )
+                                            //5
+                                            .addCellWithValue(
+                                                    ofAll(docDesc.getRefCondition())
+                                                            .map(RefCondit::getRefCondition)
+                                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
+                                            //6
+                                            .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
+                                            //7
+                                            //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                            .addCellWithValue(Option.of(docDesc.getFormDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                            //8
+                                            //TODO: Переделать, когда станет понятно, как определять отсутствие файла
+                                            .addCellWithValue(Option.of(docDesc.getSampleDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                            //9
+                                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                            //10
+                                            .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                            //11
+                                            .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                            );
                         }
-                        AtomicInteger docNum = new AtomicInteger(0);
-                        subService.getFillDocSubservice1().forEach(docDesc ->
-                                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                        //1
-                                        .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
-                                        //2
-                                        .addCellWithValue(
-                                                Option.of(docDesc.getParentDocument())
-                                                        .map(Document::getDescription).orElse(NO))
-                                        //3
-                                        .addCellWithValue(
-                                                Option.of(docDesc.getDocument())
-                                                        .map(Document::getDescription).orElse(NO))
-                                        //4
-                                        .addCellWithValue(
-                                                ofAll(
-                                                        Option.of(String.format("%d экз., %s", docDesc.getInstancesNumber(), docDesc.getTypeDocument().getValue())),
-                                                        ofAll(docDesc.getIdentificationApplicant(),
-                                                                docDesc.getVerificatOriginal(),
-                                                                docDesc.getRemovingCopy(),
-                                                                docDesc.getFormatCase())
-                                                                .filter(field -> field.getValue().orElse(false))
-                                                                .map(CMDField::getDescription),
-                                                        ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
-                                                )
-                                                        .flatMap(identity())
-                                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
-                                        )
-                                        //5
-                                        .addCellWithValue(
-                                                ofAll(docDesc.getRefCondition())
-                                                        .map(RefCondit::getRefCondition)
-                                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
-                                        //6
-                                        .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
-                                        //7
-                                        //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                        .addCellWithValue(Option.of(docDesc.getFormDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                        //8
-                                        //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                        .addCellWithValue(Option.of(docDesc.getSampleDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                        //9
-                                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                                        //10
-                                        .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
-                                        //11
-                                        .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
-                        );
                     }
             );
         }
@@ -377,7 +381,8 @@ public class HSSFWorkbookTransformers {
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
             service.getSubServices().forEach(subService -> {
-                        if (subService.getFillResultSubservice1().isEmpty()) {
+                        List<DescriptionDocumentsObslugi> subServiceResultDocs = subService.getFillResultSubservice2().stream().collect(toList());
+                        if (subServiceResultDocs.isEmpty()) {
                             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                                     .addCellWithValue("") //1
                                     //2
@@ -396,102 +401,103 @@ public class HSSFWorkbookTransformers {
                                     .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
                                     //12
                                     .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
-                        }
-                        AtomicInteger docNum = new AtomicInteger(0);
-                        subService.getFillResultSubservice1().forEach(resDesc -> {
-                                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                            //1
-                                            .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
-                                            //2
-                                            .addCellWithValue(
-                                                    Option.of(resDesc.getDescription()).orElse(NO))
-                                            //3
-                                            .addCellWithValue(
-                                                    Option.of(resDesc.getRequirements()).orElse(NO))
-                                            //4
-                                            .addCellWithValue(
-                                                    Option.of(resDesc.getCharacterOfResult())
-                                                            .map(Lookup::getValue).orElse(NO)
-                                            )
-                                            //5
-                                            .addCellWithValue(
-                                                    Option.of(resDesc.getDocForm())
-                                                            .orElse("/")
-                                                            .endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                            //6
-                                            .addCellWithValue(
-                                                    Option.of(resDesc.getDocExample())
-                                                            .orElse("/")
-                                                            .endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                            //7
-                                            .addCellWithValue(
+                        } else {
+                            AtomicInteger docNum = new AtomicInteger(0);
+                            subServiceResultDocs.forEach(resDesc -> {
+                                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                                //1
+                                                .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
+                                                //2
+                                                .addCellWithValue(
+                                                        Option.of(resDesc.getDescription()).orElse(NO))
+                                                //3
+                                                .addCellWithValue(
+                                                        Option.of(resDesc.getRequirements()).orElse(NO))
+                                                //4
+                                                .addCellWithValue(
+                                                        Option.of(resDesc.getCharacterOfResult())
+                                                                .map(Lookup::getValue).orElse(NO)
+                                                )
+                                                //5
+                                                .addCellWithValue(
+                                                        Option.of(resDesc.getDocForm())
+                                                                .orElse("/")
+                                                                .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                                //6
+                                                .addCellWithValue(
+                                                        Option.of(resDesc.getDocExample())
+                                                                .orElse("/")
+                                                                .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                                //7
+                                                .addCellWithValue(
 
-                                                    ofAll(
-                                                            ofAll(
-                                                                    resDesc.getTerrOrgOnPaper(),
-                                                                    resDesc.getInMFConPaperFrom(),
-                                                                    resDesc.getInMFCinDocFromITOrg(),
-                                                                    resDesc.getFromCabinetGosUslug(),
-                                                                    resDesc.getFromGosUslugInELForm())
-                                                                    .filter(field -> field.getValue().orElse(false))
-                                                                    .map(CMDField::getDescription),
-                                                            Option.of(
-                                                                    resDesc.getFromCabinetOffSite())
-                                                                    .filter(field -> field.getValue()
-                                                                            .filter(value -> value.equals(true))
-                                                                            .isDefined())
-                                                                    .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteResult())),
-                                                            Option.of(
-                                                                    resDesc.getFromOffSiteElDoc())
-                                                                    .filter(field -> field.getValue()
-                                                                            .filter(value -> value.equals(true))
-                                                                            .isDefined())
-                                                                    .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteELDoc())),
-                                                            ofAll(
-                                                                    resDesc.getEmailDocWithElSignature(),
-                                                                    resDesc.getPostResult())
-                                                                    .filter(field -> field.getValue().orElse(false))
-                                                                    .map(CMDField::getDescription),
-                                                            ofAll(
-                                                                    resDesc.getGetRezultSubServices())
-                                                                    .filter(field -> field != null)
-                                                                    .map(SubserviceResult::getDescription)
-                                                    )
-                                                            .flatMap(Function.identity())
-                                                            .map("- "::concat)
-                                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                                                            .orElse("-")
-                                            )
-                                            //8
-                                            .addCellWithValue(
-                                                    Option.of(resDesc)
-                                                            .filter(result ->
-                                                                    result.getNumberOfDays() != null &&
-                                                                            result.getUnitOfMeasure1() != null)
-                                                            .map(result -> String.format("%s %s",
-                                                                    result.getNumberOfDays(),
-                                                                    result.getUnitOfMeasure1().getValue()))
-                                                            .orElse(NO)
-                                            )
-                                            //9
-                                            .addCellWithValue(
-                                                    Option.of(resDesc)
-                                                            .filter(result ->
-                                                                    result.getNumOfDays() != null &&
-                                                                            result.getUnitOfMeas1() != null)
-                                                            .map(result -> String.format("%s %s",
-                                                                    result.getNumOfDays(),
-                                                                    result.getUnitOfMeas1().getValue()))
-                                                            .orElse(NO)
-                                            )
-                                            //10
-                                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                                            //11
-                                            .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
-                                            //12
-                                            .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
-                                }
-                        );
+                                                        ofAll(
+                                                                ofAll(
+                                                                        resDesc.getTerrOrgOnPaper(),
+                                                                        resDesc.getInMFConPaperFrom(),
+                                                                        resDesc.getInMFCinDocFromITOrg(),
+                                                                        resDesc.getFromCabinetGosUslug(),
+                                                                        resDesc.getFromGosUslugInELForm())
+                                                                        .filter(field -> field.getValue().orElse(false))
+                                                                        .map(CMDField::getDescription),
+                                                                Option.of(
+                                                                        resDesc.getFromCabinetOffSite())
+                                                                        .filter(field -> field.getValue()
+                                                                                .filter(value -> value.equals(true))
+                                                                                .isDefined())
+                                                                        .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteResult())),
+                                                                Option.of(
+                                                                        resDesc.getFromOffSiteElDoc())
+                                                                        .filter(field -> field.getValue()
+                                                                                .filter(value -> value.equals(true))
+                                                                                .isDefined())
+                                                                        .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteELDoc())),
+                                                                ofAll(
+                                                                        resDesc.getEmailDocWithElSignature(),
+                                                                        resDesc.getPostResult())
+                                                                        .filter(field -> field.getValue().orElse(false))
+                                                                        .map(CMDField::getDescription),
+                                                                ofAll(
+                                                                        resDesc.getGetRezultSubServices())
+                                                                        .filter(field -> field != null)
+                                                                        .map(SubserviceResult::getDescription)
+                                                        )
+                                                                .flatMap(Function.identity())
+                                                                .map("- "::concat)
+                                                                .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                                                .orElse("-")
+                                                )
+                                                //8
+                                                .addCellWithValue(
+                                                        Option.of(resDesc)
+                                                                .filter(result ->
+                                                                        result.getNumberOfDays() != null &&
+                                                                                result.getUnitOfMeasure1() != null)
+                                                                .map(result -> String.format("%s %s",
+                                                                        result.getNumberOfDays(),
+                                                                        result.getUnitOfMeasure1().getValue()))
+                                                                .orElse(NO)
+                                                )
+                                                //9
+                                                .addCellWithValue(
+                                                        Option.of(resDesc)
+                                                                .filter(result ->
+                                                                        result.getNumOfDays() != null &&
+                                                                                result.getUnitOfMeas1() != null)
+                                                                .map(result -> String.format("%s %s",
+                                                                        result.getNumOfDays(),
+                                                                        result.getUnitOfMeas1().getValue()))
+                                                                .orElse(NO)
+                                                )
+                                                //10
+                                                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                                //11
+                                                .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                                //12
+                                                .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                                    }
+                            );
+                        }
                     }
             );
         }
