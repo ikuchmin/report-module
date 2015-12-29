@@ -47,6 +47,18 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
         }
 
         Map<String, DataObjectField> dFields = dataObject.getFields();
+        Try.of(() -> rawType.getDeclaredField("id"))
+                .onFailure(e -> log.info(() -> "Field id not exists"))
+                .andThen(f -> {
+                    f.setAccessible(true);
+                    f.set(instance, Integer.parseInt(dataObject.getId()));
+                })
+                .onFailure(e -> log.warning(() -> "Field with name "
+                        .concat("id isn't set")
+                        .concat(" Factory type: String.")
+                        .concat(" Parent object description in CMDBuild: ").concat(dFields.get("Description").getValue().toString()).concat(".")
+                        .concat(" Message error: ").concat(e.getMessage())));
+
         Stream.ofAll(rawType.getDeclaredFields()).forEach(f ->
                 Try.of(() -> objectRegistry.dispatch(f.getType()))
                         .filter(v -> v != null)
