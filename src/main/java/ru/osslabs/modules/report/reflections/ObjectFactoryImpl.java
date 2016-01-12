@@ -48,7 +48,7 @@ public class ObjectFactoryImpl<T> extends AbstractObjectFactory<T> {
 
         Map<String, DataObjectField> dFields = dataObject.getFields();
         Try.of(() -> rawType.getDeclaredField("id"))
-                .onFailure(e -> log.info(() -> "Field id not exists"))
+                .onFailure(e -> log.info(() -> "Field id does not exist"))
                 .andThen(f -> {
                     f.setAccessible(true);
                     f.set(instance, Integer.parseInt(dataObject.getId()));

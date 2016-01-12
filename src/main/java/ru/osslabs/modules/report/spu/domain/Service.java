@@ -11,6 +11,7 @@ import java.util.List;
  */
 @Data
 public class Service {
+    private Integer id;
     @CMDBuildField(name = "fullname")
     private String fullName;
 

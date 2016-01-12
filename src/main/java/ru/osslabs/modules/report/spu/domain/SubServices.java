@@ -16,6 +16,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class SubServices {
+    private Integer id;
     //    private REFERENCE obj;
 //    private SPECIFICATION service;
 //    private SPECIFICATION objAppeal;
@@ -63,9 +64,9 @@ public class SubServices {
     //    private Boolean otherMethods;
     private List<SubserviceResult> getRezultSubServices;
     @CMDBuildField(name = "FillDocSubservice1")
-    private List<DescriptionDocumentsObslugi> fillDocSubservice1;
+    private List<DescriptionDocumentsObslugi> fillDocSubservice;
     @CMDBuildField(name = "FillResultSubservice2")
-    private List<DescriptionDocumentsObslugi> fillResultSubservice2;
+    private List<DescriptionDocumentsObslugi> fillResultSubservice;
     @CMDBuildField(name = "OfficialWebsite")
     private CMDField<Boolean> officialWebsite;
     @CMDBuildField(name = "WebAddress")
@@ -126,9 +127,10 @@ public class SubServices {
     private CMDField<Boolean> wayFilinComplaint;
     @CMDBuildField(name = "OthFlinComplaint")
     private List<OthWayFiliComplaint> othFlinComplaint;
+    @CMDBuildField(name = "FillDetailsApplicant11")
+    private List<ApplicantsCircleSubservice> fillDetailsApplicant;
 
 //    private Boolean startDetailsApplicant;
-//    private SPECIFICATION fillDetailsApplicant;
 //    private Boolean startDocSubservice;
 //    private Boolean startResultSubservice;
 //    private Boolean startProcessSubservice;

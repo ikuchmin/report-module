@@ -65,6 +65,11 @@ public class DescriptionDocumentsObslugi {
     private Lookup<String> unitOfMeas1;
     private String docForm;
     private String docExample;
+
+    @CMDBuildField(name = "CategPersoSubservices")
+    private List<ApplicantsCircleSubservice> categPersoSubservices;
+    @CMDBuildField(name = "ApplicRepresentative")
+    private List<DescribeRepresentativesApplicants> applicRepresentative;
 }
 
 
