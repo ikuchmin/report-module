@@ -649,7 +649,7 @@ public class HSSFWorkbookTransformers {
                                 if (!approvedTKMW.isEmpty()) {
                                     DescriptionTKMW descriptionTKMW = approvedTKMW.get(0);
                                     cellText += Option.of(descriptionTKMW.getNameTKMW())
-                                        .map(value -> String.format("Наименование ТКМВ \"%s\"", value))
+                                        .map(value -> String.format("\"%s\"", value))
                                         .orElse(EMPTY);
                                     Option<DirectTKMW> directTKMW = Option.of(descriptionTKMW.getTypDocApprovKMW1().get(0));
                                     if (directTKMW.isDefined()) {
@@ -686,6 +686,7 @@ public class HSSFWorkbookTransformers {
                                 ofAll(docDesc.getRefMVRequests())
                                     .map(MVrequests::getNamOrgGuiInteRequest)
                                     .map(OrgGovernment::getFullname)
+                                    .map("- "::concat)
                                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                     .orElse(NO)
                             )
@@ -694,6 +695,7 @@ public class HSSFWorkbookTransformers {
                                 ofAll(docDesc.getRefMVRequests())
                                     .map(MVrequests::getMamAuthSeInteReq)
                                     .map(OrgGovernment::getFullname)
+                                    .map("- "::concat)
                                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                     .orElse(NO)
                             )
@@ -701,6 +703,7 @@ public class HSSFWorkbookTransformers {
                             .addCellWithValue(
                                 ofAll(docDesc.getRefMVRequests())
                                     .map(MVrequests::getSidElectService)
+                                    .map("- "::concat)
                                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                                     .orElse(NO)
                             )
