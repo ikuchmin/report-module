@@ -70,6 +70,11 @@ public class DescriptionDocumentsObslugi {
     private List<ApplicantsCircleSubservice> categPersoSubservices;
     @CMDBuildField(name = "ApplicRepresentative")
     private List<DescribeRepresentativesApplicants> applicRepresentative;
+    @CMDBuildField(name = "RefMVRequests")
+    private List<MVrequests> refMVRequests;
+    @CMDBuildField(name = "LookupMethodGet")
+    private Lookup<String> lookupMethodGet;
+
 }
 
 

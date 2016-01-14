@@ -43,10 +43,10 @@ public class Service {
     private List<RefQualityRating> refQualityRating;
     @CMDBuildField(name = "RefOrgGovemment")
     private List<RefOrgGovemment> refOrgGovemment;
-/*
+    @CMDBuildField(name = "NalichieApprovedTKMW")
+    private List<DescriptionTKMW> nalichieApprovedTKMW;
 
-    ,
-    ,
+/*
     HaveQualityRating,
     NalichieApprovedTKMW,
     RefQualityRating,

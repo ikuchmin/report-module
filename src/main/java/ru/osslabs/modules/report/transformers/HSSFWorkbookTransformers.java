@@ -31,6 +31,9 @@ import static ru.osslabs.modules.report.ReportUtils.objectNotNull;
  */
 public class HSSFWorkbookTransformers {
     private static Locale RUSSIAN = new Locale("ru", "RU");
+    private static final String NO = "Нет";
+    private static final String SPACE = " ";
+    private static final String EMPTY = "";
 
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromMatrixToHSSFWorkbook(Re report, Matrix<Double> data) {
         // TODO: Возможно стоит как-то ограничить время на Future<V>::get
@@ -80,19 +83,103 @@ public class HSSFWorkbookTransformers {
         return workbook;
     }
 
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToFirstReport(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            //1
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Наименование органа, предоставляющего услугу")
+                .addCellWithValue(String.format("%s",
+                    ofAll(service.getRefOrgGovemment())
+                        .headOption()
+                        .map(RefOrgGovemment::getFullname)
+                        .orElse(NO)))
+                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)));
+            //2
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Номер услуги в федеральном реестре")
+                .addCellWithValue(String.format("%s", service.getFederalNumberOfService()));
+            //3
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Полное наименование услуги")
+                .addCellWithValue(String.format("%s", service.getDescription()));
+            //4
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Краткое наименование услуги")
+                .addCellWithValue(String.format("%s", service.getNameService()));
+            //5
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Административный регламент предоставления государственной услуги")
+                .addCellWithValue(ofAll(service.getARegl())
+                    .map(npa -> String.format(RUSSIAN,
+                        "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s.",
+                        ofAll(npa.getTYPE_NPA())
+                            .headOption()
+                            .map(NormativeType::getDescription)
+                            .orElse(SPACE),
+                        npa.getDateNPA(),
+                        npa.getNumberNPA(),
+                        npa.getNameNPA(),
+                        ofAll(npa.getOgv_NPA())
+                            .headOption()
+                            .map(OgvGovernment::getFullName)
+                            .orElse(SPACE)))
+                    .map("- "::concat)
+                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                    .orElse("-"));
+            //6
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Перечень «подуслуг»")
+                .addCellWithValue(ofAll(service.getSubServices())
+                    .map(SubServices::getDescription)
+                    .map("- "::concat)
+                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                    .orElse("-"));
+            //7
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(String.format("%d", rowIdx.get()))
+                .addCellWithValue("Способы оценки качества предоставления государственной услуги")
+                .addCellWithValue(ofAll(  // 9
+                    ofAll(service.getRadiotelephone(),
+                        service.getTerminal(),
+                        service.getPortalPublicServices(),
+                        service.getSiteVashControl())
+                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
+                        .map(CMDField::getDescription),
+                    Option.of(service.getOfficialSite())
+                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                        .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
+                    ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
+                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
+                    .flatMap(ignored -> ignored)
+                    .map("- "::concat)
+                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"));
+        }
+        return workbook;
+    }
+
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToSecondReport(Re report, Option<Service> serviceOption) {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
 
-        String NO = "Нет";
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
             service.getSubServices().forEach((ss) ->
                 Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                     .addCellWithValue(String.format("%d", rowIdx.get())) // If you confuse, which number was row. Here we see rowIndx + 1 because in Row.of we saw rowIdx.getAndIncrement()
-                    .addCellWithValue(Option.of(ss.getNamesubservice())
+                    .addCellWithValue(Option.of(ss.getDescription())
                         .orElse(NO))
                     .addCellWithValue(Option.of(ss.getPeriodsubservice())
                         .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
@@ -133,14 +220,14 @@ public class HSSFWorkbookTransformers {
                                 ofAll(npa.getTYPE_NPA())
                                     .headOption()
                                     .map(NormativeType::getDescription)
-                                    .orElse(""),
+                                    .orElse(SPACE),
                                 npa.getDateNPA(),
                                 npa.getNumberNPA(),
                                 npa.getNameNPA(),
                                 ofAll(npa.getOgv_NPA())
                                     .headOption()
                                     .map(OgvGovernment::getFullName)
-                                    .orElse(""),
+                                    .orElse(SPACE),
                                 p.getPointForPayment())))
                         .toSet()
                         .map("- "::concat)
@@ -204,7 +291,6 @@ public class HSSFWorkbookTransformers {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
-        final String NO = "Нет";
         AtomicInteger rowIdx = new AtomicInteger(0);
 
         if (serviceOption.isDefined()) {
@@ -219,35 +305,35 @@ public class HSSFWorkbookTransformers {
                         //1
                         .addCellWithValue(String.format("%d", rowIdx.get()))
                         //2
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //3
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //4
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //5
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //6
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //7
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //8
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //9
                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                         //10
-                        .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                         //11
-                        .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                         //12
                         .addCellWithValue("Данные не заполнены")
                         //13
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //14
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //15
-                        .addCellWithValue(" ")
+                        .addCellWithValue(SPACE)
                         //16
-                        .addCellWithValue(" ");
+                        .addCellWithValue(SPACE);
                 } else {
                     //перечень документов подуслуги
                     List<DescriptionDocumentsObslugi> docList = subService.getFillDocSubservice();
@@ -289,25 +375,25 @@ public class HSSFWorkbookTransformers {
                                 //1
                                 .addCellWithValue(String.format("%d", rowIdx.get()))
                                 //2
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //3
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //4
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //5
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //6
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //7
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //8
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
-                                .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                                 //11
-                                .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                                .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                                 //12
                                 .addCellWithValue(
                                     ofAll(applicantDesc.getApplicantsCategorySubservice())
@@ -315,13 +401,13 @@ public class HSSFWorkbookTransformers {
                                         .map(PersonsEntitledReceivePodology::getDescription)
                                         .orElse(NO))
                                 //13
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //14
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //15
-                                .addCellWithValue(" ")
+                                .addCellWithValue(SPACE)
                                 //16
-                                .addCellWithValue(" ");
+                                .addCellWithValue(SPACE);
                         } else {
                             //главный список, по которому будем выводить строки
                             //он должен быть длиннее, чем второстепенный
@@ -346,7 +432,7 @@ public class HSSFWorkbookTransformers {
                                     //1
                                     .addCellWithValue(String.format("%d", rowIdx.get()))
                                     //2
-                                    .addCellWithValue(" ")
+                                    .addCellWithValue(SPACE)
                                     //3
                                     .addCellWithValue(Option.of(primDocDesc)
                                         .map(DescriptionDocumentsObslugi::getDocument)
@@ -357,9 +443,9 @@ public class HSSFWorkbookTransformers {
                                         .map(DescriptionDocumentsObslugi::getRequirementsDocument)
                                         .orElse(NO))
                                     //5
-                                    .addCellWithValue(" ")
+                                    .addCellWithValue(SPACE)
                                     //6
-                                    .addCellWithValue(" ")
+                                    .addCellWithValue(SPACE)
                                     //7
                                     .addCellWithValue(() -> {
                                         if (docNum < finalSecondaryList.size()) {
@@ -385,9 +471,9 @@ public class HSSFWorkbookTransformers {
                                     //9
                                     .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                     //10
-                                    .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                                     //11
-                                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                                     //12
                                     .addCellWithValue(
                                         ofAll(applicantDesc.getApplicantsCategorySubservice())
@@ -436,97 +522,10 @@ public class HSSFWorkbookTransformers {
         return workbook;
     }
 
-    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToHSSFWorkbook(Re report, Option<Service> serviceOption) {
-        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
-        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
-        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
-        String NO = "Нет";
-        AtomicInteger rowIdx = new AtomicInteger(0);
-        if (serviceOption.isDefined()) {
-            Service service = serviceOption.get();
-            //1
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Наименование органа, предоставляющего услугу")
-                .addCellWithValue(String.format("%s",
-                    ofAll(service.getRefOrgGovemment())
-                        .headOption()
-                        .map(RefOrgGovemment::getFullname)
-                        .orElse(NO)))
-                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)));
-            //2
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Номер услуги в федеральном реестре")
-                .addCellWithValue(String.format("%s", service.getFederalNumberOfService()));
-            //3
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Полное наименование услуги")
-                .addCellWithValue(String.format("%s", service.getNameService()));
-            //4
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Краткое наименование услуги")
-                .addCellWithValue(String.format("%s", service.getDescription()));
-            //5
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Административный регламент предоставления государственной услуги")
-                .addCellWithValue(ofAll(service.getARegl())
-                    .map(npa -> String.format(RUSSIAN,
-                        "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s.",
-                        ofAll(npa.getTYPE_NPA())
-                            .headOption()
-                            .map(NormativeType::getDescription)
-                            .orElse(""),
-                        npa.getDateNPA(),
-                        npa.getNumberNPA(),
-                        npa.getNameNPA(),
-                        ofAll(npa.getOgv_NPA())
-                            .headOption()
-                            .map(OgvGovernment::getFullName)
-                            .orElse("")))
-                    .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                    .orElse("-"));
-            //6
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Перечень «подуслуг»")
-                .addCellWithValue(ofAll(service.getSubServices())
-                    .map(SubServices::getNamesubservice)
-                    .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                    .orElse("-"));
-            //7
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Способы оценки качества предоставления государственной услуги")
-                .addCellWithValue(ofAll(  // 9
-                    ofAll(service.getRadiotelephone(),
-                        service.getTerminal(),
-                        service.getPortalPublicServices(),
-                        service.getSiteVashControl())
-                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
-                        .map(CMDField::getDescription),
-                    Option.of(service.getOfficialSite())
-                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                        .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
-                    ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                    .flatMap(ignored -> ignored)
-                    .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"));
-        }
-        return workbook;
-    }
-
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToFourthReport(Re report, Option<Service> serviceOption) {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
-        final String NO = "Нет";
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
@@ -535,21 +534,21 @@ public class HSSFWorkbookTransformers {
                         .collect(toList());
                     if (subServiceInputDocs.isEmpty()) {
                         Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                            .addCellWithValue("") //1
-                            .addCellWithValue("") //2
+                            .addCellWithValue(SPACE) //1
+                            .addCellWithValue(SPACE) //2
                             //3
                             .addCellWithValue("Данные не заполнены")
-                            .addCellWithValue("") //4
-                            .addCellWithValue("") //5
-                            .addCellWithValue("") //6
-                            .addCellWithValue("") //7
-                            .addCellWithValue("") //8
+                            .addCellWithValue(SPACE) //4
+                            .addCellWithValue(SPACE) //5
+                            .addCellWithValue(SPACE) //6
+                            .addCellWithValue(SPACE) //7
+                            .addCellWithValue(SPACE) //8
                             //9
                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                             //10
-                            .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                             //11
-                            .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
                     } else {
                         AtomicInteger docNum = new AtomicInteger(0);
                         subServiceInputDocs.forEach(docDesc ->
@@ -595,9 +594,9 @@ public class HSSFWorkbookTransformers {
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
-                                .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                                 //11
-                                .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                                .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                         );
                     }
                 }
@@ -606,11 +605,175 @@ public class HSSFWorkbookTransformers {
         return workbook;
     }
 
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToFifthReport(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            List<SubServices> subServices = service.getSubServices();
+            for (SubServices subService : subServices) {
+                List<DescriptionDocumentsObslugi> docList = ofAll(subService)
+                    .flatMap(SubServices::getFillDocSubservice)
+                    .filter(doc -> !doc.getRefMVRequests().isEmpty())
+                    .toJavaList();
+                if (docList.isEmpty()) {
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        .addCellWithValue(SPACE) //1
+                        //2
+                        .addCellWithValue("Данные не заполнены")
+                        .addCellWithValue(SPACE) //3
+                        .addCellWithValue(SPACE) //4
+                        .addCellWithValue(SPACE) //5
+                        .addCellWithValue(SPACE) //6
+                        .addCellWithValue(SPACE) //7
+                        .addCellWithValue(SPACE) //8
+                        .addCellWithValue(SPACE) //9
+                        .addCellWithValue(SPACE) //10
+                        //11
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        //12
+                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                        //13
+                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
+                } else {
+                    ofAll(docList).forEach(docDesc ->
+                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                            .addCellWithValue(SPACE) //1
+                            //2
+                            .addCellWithValue(() -> {
+                                String cellText = EMPTY;
+                                List<DescriptionTKMW> approvedTKMW = service.getNalichieApprovedTKMW();
+                                if (!approvedTKMW.isEmpty()) {
+                                    DescriptionTKMW descriptionTKMW = approvedTKMW.get(0);
+                                    cellText += Option.of(descriptionTKMW.getNameTKMW())
+                                        .map(value -> String.format("Наименование ТКМВ \"%s\"", value))
+                                        .orElse(EMPTY);
+                                    Option<DirectTKMW> directTKMW = Option.of(descriptionTKMW.getTypDocApprovKMW1().get(0));
+                                    if (directTKMW.isDefined()) {
+                                        cellText += "\nНаименование документа, утвердившего (одобрившего) ТКМВ";
+                                        cellText += directTKMW
+                                            .map(DirectTKMW::getVidTKMW)
+                                            .map(value -> String.format("\n%s", value.getDescription()))
+                                            .orElse(EMPTY);
+                                        cellText += directTKMW
+                                            .map(value -> String.format("\n%1$td.%1$tm.%1$tY", value.getData()))
+                                            .orElse(EMPTY);
+                                        cellText += directTKMW
+                                            .map(value -> String.format("\n%s", value.getNumber()))
+                                            .orElse(EMPTY);
+                                        cellText += directTKMW
+                                            .map(value -> String.format("\n%s", value.getName()))
+                                            .orElse(EMPTY);
+                                    }
+                                }
+
+                                return cellText;
+                            })
+                            //3
+                            .addCellWithValue(Option.of(docDesc.getDescription()).orElse(NO))
+                            //4
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getInformationContent)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(NO)
+                            )
+                            //5
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getNamOrgGuiInteRequest)
+                                    .map(OrgGovernment::getFullname)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(NO)
+                            )
+                            //6
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getMamAuthSeInteReq)
+                                    .map(OrgGovernment::getFullname)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(NO)
+                            )
+                            //7
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getSidElectService)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(NO)
+                            )
+                            //8
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(request ->{
+                                        String cellText = EMPTY;
+                                        if (request.getRequestExecutionTerm() != null && request.getUnitAllrequest() != null) {
+                                            if (!cellText.equals(EMPTY)) {
+                                                cellText += "\n";
+                                            }
+                                            cellText += String.format("Общий срок осуществления межведомственного информационного взаимодействия\n%1$d %2$s",
+                                                request.getRequestExecutionTerm(),
+                                                request.getUnitAllrequest().getValue());
+                                        }
+                                        if (request.getRequestingMV() != null && request.getUnitrequestingMV() != null) {
+                                            if (!cellText.equals(EMPTY)) {
+                                                cellText += "\n";
+                                            }
+                                            cellText += String.format("Сроки направления межведомственного запроса\n%1$s %2$s",
+                                                request.getRequestingMV(),
+                                                request.getUnitrequestingMV().getValue());
+
+                                        }
+                                        if (request.getDirectionResponse() != null && request.getUnitdirectionResponse() != null) {
+                                            if (!cellText.equals(EMPTY)) {
+                                                cellText += "\n";
+                                            }
+                                            cellText += String.format("Сроки направления ответа на межведомственный запрос\n%1$s %2$s",
+                                                request.getDirectionResponse(),
+                                                request.getUnitdirectionResponse().getValue());
+
+                                        }
+                                        if (request.getCommunionResponse() != null && request.getComResponse() != null) {
+                                            if (!cellText.equals(EMPTY)) {
+                                                cellText += "\n";
+                                            }
+                                            cellText += String.format("Сроки приобщения документов/сведений, " +
+                                                "полученных в рамках межведомственного информационного взаимодействия, " +
+                                                "к личному делу заявителя\n%1$s %2$s",
+                                                request.getCommunionResponse(),
+                                                request.getComResponse().getValue());
+
+                                        }
+                                        return cellText;
+                                    })
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(NO)
+                            )
+                            //9
+                            //TODO изменить в соответствии с логикой получения файла
+                            .addCellWithValue("Файл не приложен")
+                            //10
+                            //TODO изменить в соответствии с логикой получения файла
+                            .addCellWithValue("Файл не приложен")
+                            //11
+                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                            //12
+                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                            //13
+                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                    );
+                }
+            }
+        }
+        return workbook;
+    }
+
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToSixthReport(Re report, Option<Service> serviceOption) {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
-        final String NO = "Нет";
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
@@ -618,23 +781,23 @@ public class HSSFWorkbookTransformers {
                     List<DescriptionDocumentsObslugi> subServiceResultDocs = subService.getFillResultSubservice().stream().collect(toList());
                     if (subServiceResultDocs.isEmpty()) {
                         Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                            .addCellWithValue("") //1
+                            .addCellWithValue(SPACE) //1
                             //2
                             .addCellWithValue("Данные не заполнены")
-                            .addCellWithValue("") //3
-                            .addCellWithValue("") //4
-                            .addCellWithValue("") //5
-                            .addCellWithValue("") //6
-                            .addCellWithValue("") //7
-                            .addCellWithValue("") //8
+                            .addCellWithValue(SPACE) //3
+                            .addCellWithValue(SPACE) //4
+                            .addCellWithValue(SPACE) //5
+                            .addCellWithValue(SPACE) //6
+                            .addCellWithValue(SPACE) //7
+                            .addCellWithValue(SPACE) //8
                             //9
-                            .addCellWithValue("")
+                            .addCellWithValue(SPACE)
                             //10
                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                             //11
-                            .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                             //12
-                            .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
                     } else {
                         AtomicInteger docNum = new AtomicInteger(0);
                         subServiceResultDocs.forEach(resDesc -> {
@@ -726,9 +889,9 @@ public class HSSFWorkbookTransformers {
                                     //10
                                     .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                     //11
-                                    .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                                     //12
-                                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO));
+                                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
                             }
                         );
                     }
@@ -742,14 +905,13 @@ public class HSSFWorkbookTransformers {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
-        final String NO = "Нет";
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
             service.getSubServices().forEach(subService ->
                 Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                     //1
-                    .addCellWithValue("")
+                    .addCellWithValue(SPACE)
                     //2
                     .addCellWithValue(ofAll(
                         Option.of(subService.getOfficialWebsite())
@@ -845,9 +1007,9 @@ public class HSSFWorkbookTransformers {
                     //8
                     .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                     //9
-                    .addCellWithValue(Option.of(service.getNameService()).orElse(NO))
+                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
                     //10
-                    .addCellWithValue(Option.of(subService.getNamesubservice()).orElse(NO))
+                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                     //11
                     .addCellWithValue(String.format("%d", rowIdx.get()))
 

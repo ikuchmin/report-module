@@ -21,7 +21,8 @@ public class SubServices {
 //    private SPECIFICATION service;
 //    private SPECIFICATION objAppeal;
     private String namesubservice;
-    //    private String description;
+    @CMDBuildField(name = "Description")
+    private String description;
 //    private String desc2;
     private Integer periodsubservice;
     @CMDBuildField(name = "FormPeriodSubservice")
