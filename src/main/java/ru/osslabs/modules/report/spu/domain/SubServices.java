@@ -130,6 +130,8 @@ public class SubServices {
     private List<OthWayFiliComplaint> othFlinComplaint;
     @CMDBuildField(name = "FillDetailsApplicant11")
     private List<ApplicantsCircleSubservice> fillDetailsApplicant;
+    @CMDBuildField(name = "FillProcessSubservice")
+    private List<ProcessesSubservices> fillProcessSubservice;
 
 //    private Boolean startDetailsApplicant;
 //    private Boolean startDocSubservice;

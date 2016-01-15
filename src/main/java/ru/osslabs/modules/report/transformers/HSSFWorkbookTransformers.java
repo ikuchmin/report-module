@@ -34,6 +34,7 @@ public class HSSFWorkbookTransformers {
     private static final String NO = "Нет";
     private static final String SPACE = " ";
     private static final String EMPTY = "";
+    public static final String NO_DATA = "Данные не заполнены";
 
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromMatrixToHSSFWorkbook(Re report, Matrix<Double> data) {
         // TODO: Возможно стоит как-то ограничить время на Future<V>::get
@@ -325,7 +326,7 @@ public class HSSFWorkbookTransformers {
                         //11
                         .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                         //12
-                        .addCellWithValue("Данные не заполнены")
+                        .addCellWithValue(NO_DATA)
                         //13
                         .addCellWithValue(SPACE)
                         //14
@@ -537,7 +538,7 @@ public class HSSFWorkbookTransformers {
                             .addCellWithValue(SPACE) //1
                             .addCellWithValue(SPACE) //2
                             //3
-                            .addCellWithValue("Данные не заполнены")
+                            .addCellWithValue(NO_DATA)
                             .addCellWithValue(SPACE) //4
                             .addCellWithValue(SPACE) //5
                             .addCellWithValue(SPACE) //6
@@ -623,7 +624,7 @@ public class HSSFWorkbookTransformers {
                     Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                         .addCellWithValue(SPACE) //1
                         //2
-                        .addCellWithValue("Данные не заполнены")
+                        .addCellWithValue(NO_DATA)
                         .addCellWithValue(SPACE) //3
                         .addCellWithValue(SPACE) //4
                         .addCellWithValue(SPACE) //5
@@ -710,7 +711,7 @@ public class HSSFWorkbookTransformers {
                             //8
                             .addCellWithValue(
                                 ofAll(docDesc.getRefMVRequests())
-                                    .map(request ->{
+                                    .map(request -> {
                                         String cellText = EMPTY;
                                         if (request.getRequestExecutionTerm() != null && request.getUnitAllrequest() != null) {
                                             if (!cellText.equals(EMPTY)) {
@@ -743,8 +744,8 @@ public class HSSFWorkbookTransformers {
                                                 cellText += "\n";
                                             }
                                             cellText += String.format("Сроки приобщения документов/сведений, " +
-                                                "полученных в рамках межведомственного информационного взаимодействия, " +
-                                                "к личному делу заявителя\n%1$s %2$s",
+                                                    "полученных в рамках межведомственного информационного взаимодействия, " +
+                                                    "к личному делу заявителя\n%1$s %2$s",
                                                 request.getCommunionResponse(),
                                                 request.getComResponse().getValue());
 
@@ -786,7 +787,7 @@ public class HSSFWorkbookTransformers {
                         Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                             .addCellWithValue(SPACE) //1
                             //2
-                            .addCellWithValue("Данные не заполнены")
+                            .addCellWithValue(NO_DATA)
                             .addCellWithValue(SPACE) //3
                             .addCellWithValue(SPACE) //4
                             .addCellWithValue(SPACE) //5
@@ -900,6 +901,129 @@ public class HSSFWorkbookTransformers {
                     }
                 }
             );
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromStreamServiceToSeventhReport(Re report, Option<Service> serviceOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+
+        if (serviceOption.isDefined()) {
+            Service service = serviceOption.get();
+            service.getSubServices().forEach(subService -> {
+                List<ProcessesSubservices> processSubserviceList = subService.getFillProcessSubservice();
+                if (processSubserviceList.isEmpty()) {
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        .addCellWithValue(SPACE) //1
+                        .addCellWithValue(NO_DATA) //2
+                        .addCellWithValue(SPACE) //3
+                        .addCellWithValue(SPACE) //4
+                        .addCellWithValue(SPACE) //5
+                        .addCellWithValue(SPACE) //6
+                        .addCellWithValue(SPACE) //7
+                        //8
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        //9
+                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                        //10
+                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                        .addCellWithValue(NO_DATA); //11
+                } else {
+                    processSubserviceList.forEach(techProc -> {
+                        List<AdministrativeProcedures> adminProcedureList = techProc.getListAdminProcedures();
+                        List<DescriptiProcess> procedProcessList = techProc.getNamProcedProcess();
+                        Map<AdministrativeProcedures, List<DescriptiProcess>> procedureToProcessMap = new HashMap<>();
+                        for (AdministrativeProcedures adminProc : adminProcedureList) {
+                            List<DescriptiProcess> list = new ArrayList<>();
+                            for (DescriptiProcess processDesc : procedProcessList) {
+                                if (adminProc.equals(processDesc.getBelongAdminProced2())) {
+                                    list.add(processDesc);
+                                }
+                            }
+                            procedureToProcessMap.put(adminProc, list);
+                        }
+
+                        procedureToProcessMap.forEach((adminProcedure, processList) -> {
+                            if (processList.isEmpty()) {
+                                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                    .addCellWithValue(SPACE) //1
+                                    .addCellWithValue(NO_DATA) //2
+                                    .addCellWithValue(SPACE) //3
+                                    .addCellWithValue(SPACE) //4
+                                    .addCellWithValue(SPACE) //5
+                                    .addCellWithValue(SPACE) //6
+                                    .addCellWithValue(SPACE) //7
+                                    //8
+                                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                    //9
+                                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                                    //10
+                                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                                    //11
+                                    .addCellWithValue(Option.of(adminProcedure)
+                                        .map(AdministrativeProcedures::getDescription)
+                                        .orElse(NO_DATA));
+                            } else {
+                                processList.forEach(procedureProcess -> {
+                                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                        //1
+                                        .addCellWithValue(() ->
+                                            String.format("%d", processList.indexOf(procedureProcess) + 1)
+                                        )
+                                        //2
+                                        .addCellWithValue(
+                                            Option.of(procedureProcess.getDescription()).orElse(NO)
+                                        )
+                                        //3
+                                        .addCellWithValue(
+                                            Option.of(procedureProcess.getDetailsProcProcess()).orElse(NO)
+                                        )
+                                        //4
+                                        .addCellWithValue(
+                                            ofAll(
+                                                Option.of(procedureProcess.getPeriodApplyDays())
+                                                    .map(v -> String.format("%d", v))
+                                                    .orElse(EMPTY),
+                                                Option.of(procedureProcess.getLookupClock())
+                                                    .map(Lookup::getValue).orElse(EMPTY),
+                                                Option.of(procedureProcess.getLookupTimePeriod())
+                                                    .map(Lookup::getValue).orElse(EMPTY)
+                                            )
+                                                .filter(v -> !v.equals(EMPTY))
+                                                .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                                .orElse(NO)
+                                        )
+                                        //5
+                                        .addCellWithValue(
+                                            Option.of(procedureProcess.getIspProcedur())
+                                            .map(PerformersProcedure::getDescription)
+                                            .orElse(NO)
+                                        )
+                                        //6
+                                        .addCellWithValue(
+                                            Option.of(procedureProcess.getResources()).orElse(NO)
+                                        )
+                                        //TODO переделать, когда появится механизм получения сведений о файлах
+                                        .addCellWithValue("Файл не приложен") //7
+                                        //8
+                                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                        //9
+                                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                                        //10
+                                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                                        //11
+                                        .addCellWithValue(Option.of(adminProcedure)
+                                            .map(AdministrativeProcedures::getDescription)
+                                            .orElse(NO_DATA));
+                                });
+                            }
+                        });
+                    });
+                }
+            });
         }
         return workbook;
     }

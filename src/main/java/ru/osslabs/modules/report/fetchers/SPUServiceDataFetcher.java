@@ -35,7 +35,7 @@ public class SPUServiceDataFetcher implements Fetcher<ServiceIdReport, Option<Se
         return Try.of(()->dataSource.getObject("services", serviceId))
                 .map(dataObject->(Service) new ObjectMapper().readValue(dataObject, new TypeReference<Service>() {
                 }, Object.class))
-                .onFailure(e -> log.warning(() -> String.format("Service with id $s not found. Message: %s",
+                .onFailure(e -> log.warning(() -> String.format("Service with id %s not found. Message: %s",
                         report.getServiceId(), e.getMessage())))
                 .toOption();
     }
