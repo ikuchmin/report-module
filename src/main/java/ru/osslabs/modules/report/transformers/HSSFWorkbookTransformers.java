@@ -105,7 +105,11 @@ public class HSSFWorkbookTransformers {
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Номер услуги в федеральном реестре")
-                .addCellWithValue(String.format("%s", service.getFederalNumberOfService()));
+                .addCellWithValue(
+                    Option.of(service.getFederalNumberOfService())
+                        .map(v -> String.format("%s", v))
+                        .orElse(NO)
+                );
             //3
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
@@ -142,6 +146,8 @@ public class HSSFWorkbookTransformers {
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Перечень «подуслуг»")
                 .addCellWithValue(ofAll(service.getSubServices())
+                    .append(service.getObjAppeal())
+                    .filter(v -> v != null)
                     .map(SubServices::getDescription)
                     .map("- "::concat)
                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
@@ -177,112 +183,115 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach((ss) ->
-                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                    .addCellWithValue(String.format("%d", rowIdx.get())) // If you confuse, which number was row. Here we see rowIndx + 1 because in Row.of we saw rowIdx.getAndIncrement()
-                    .addCellWithValue(Option.of(ss.getDescription())
-                        .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getPeriodsubservice())
-                        .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
-                        .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getPeriodSubservice_ExTerr())
-                        .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice_ExTer().getValue()))
-                        .orElse(NO))
-                    .addCellWithValue(ofAll(ss.getReject_noRecept())
-                        .map(Rejection::getDescription)
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse(NO))
-                    .addCellWithValue(ofAll(ss.getRejection_noProv())
-                        .map(Rejection::getDescription)
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse(NO))
-                    .addCellWithValue(ofAll(ss.getRejection_noAct())
-                        .map(Rejection::getDescription)
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse(NO))
-                    .addCellWithValue(Option.of(ss.getSuspension_days())
-                        .map((val) -> String.format(RUSSIAN, "%d %s", ss.getSuspension_days(), ss.getFormSuspension_days().getValue()))
-                        .orElse(NO))
-                    .addCellWithValue(ofAll(ss.getSubservice_Payment2())
-                        .map((p) ->
-                            String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб.",
-                                p.getDescription(),
-                                p.getSizepayment()))
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse(NO))
-                    .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
-                        .flatMap(p -> ofAll(p.getPayment_npa())
-                            .map((npa) -> String.format(RUSSIAN,
-                                "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s. Пункт: %6$s",
-                                ofAll(npa.getTYPE_NPA())
-                                    .headOption()
-                                    .map(NormativeType::getDescription)
-                                    .orElse(SPACE),
-                                npa.getDateNPA(),
-                                npa.getNumberNPA(),
-                                npa.getNameNPA(),
-                                ofAll(npa.getOgv_NPA())
-                                    .headOption()
-                                    .map(OgvGovernment::getFullName)
-                                    .orElse(SPACE),
-                                p.getPointForPayment())))
-                        .toSet()
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse("-"))
-                    .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
-                        .map(pa -> String.format(RUSSIAN,
-                            "КБК при обращении в орган власти: %s. КБК при обращении в МФЦ: %s",
-                            pa.getKbk_OGV(), pa.getKbk_MFC()))
-                        .toSet()
-                        .map("- "::concat)
-                        .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
-                        .orElse("-"))
-                    .addCellWithValue(ofAll(
-                        ofAll(ss.getLichnoVOrgan(),
-                            ss.getLichnoVTerrOrgan(),
-                            ss.getLichnoVMFC(),
-                            ss.getPortalGosUslig(),
-                            ss.getPost())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                            .map(CMDField::getDescription),
-                        Option.of(ss.getOffSiteOrganaUslugi())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                            .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAdressOffSite())),
-                        ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                        .flatMap(ignored -> ignored)
-                        .toSet()
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                        .orElse("-"))
-                    .addCellWithValue(ofAll(  // 9
-                        ofAll(ss.getTerrOrgOnPaper(),
-                            ss.getInMFConPaperFrom(),
-                            ss.getInMFCinDocFromITOrg(),
-                            ss.getFromCabinetGosUslug(),
-                            ss.getFromGosUslugInELForm(),
-                            ss.getEmailDocWithElSignature(),
-                            ss.getPostResult())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
-                            .map(CMDField::getDescription),
-                        Option.of(ss.getFromCabinetOffSite())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                            .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteResult())),
-                        Option.of(ss.getFromOffSiteElDoc())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                            .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteELDoc())),
-                        ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                        .flatMap(ignored -> ignored)
-                        .map("- "::concat)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
-                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                    .addCellWithValue(service.getDescription()));
+            ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .forEach((ss) ->
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        .addCellWithValue(String.format("%d", rowIdx.get())) // If you confuse, which number was row. Here we see rowIndx + 1 because in Row.of we saw rowIdx.getAndIncrement()
+                        .addCellWithValue(Option.of(ss.getDescription())
+                            .orElse(NO))
+                        .addCellWithValue(Option.of(ss.getPeriodsubservice())
+                            .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
+                            .orElse(NO))
+                        .addCellWithValue(Option.of(ss.getPeriodSubservice_ExTerr())
+                            .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice_ExTer().getValue()))
+                            .orElse(NO))
+                        .addCellWithValue(ofAll(ss.getReject_noRecept())
+                            .map(Rejection::getDescription)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse(NO))
+                        .addCellWithValue(ofAll(ss.getRejection_noProv())
+                            .map(Rejection::getDescription)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse(NO))
+                        .addCellWithValue(ofAll(ss.getRejection_noAct())
+                            .map(Rejection::getDescription)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse(NO))
+                        .addCellWithValue(Option.of(ss.getSuspension_days())
+                            .map((val) -> String.format(RUSSIAN, "%d %s", ss.getSuspension_days(), ss.getFormSuspension_days().getValue()))
+                            .orElse(NO))
+                        .addCellWithValue(ofAll(ss.getSubservice_Payment2())
+                            .map((p) ->
+                                String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб.",
+                                    p.getDescription(),
+                                    p.getSizepayment()))
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse(NO))
+                        .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
+                            .flatMap(p -> ofAll(p.getPayment_npa())
+                                .map((npa) -> String.format(RUSSIAN,
+                                    "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s. Пункт: %6$s",
+                                    ofAll(npa.getTYPE_NPA())
+                                        .headOption()
+                                        .map(NormativeType::getDescription)
+                                        .orElse(SPACE),
+                                    npa.getDateNPA(),
+                                    npa.getNumberNPA(),
+                                    npa.getNameNPA(),
+                                    ofAll(npa.getOgv_NPA())
+                                        .headOption()
+                                        .map(OgvGovernment::getFullName)
+                                        .orElse(SPACE),
+                                    p.getPointForPayment())))
+                            .toSet()
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse("-"))
+                        .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
+                            .map(pa -> String.format(RUSSIAN,
+                                "КБК при обращении в орган власти: %s. КБК при обращении в МФЦ: %s",
+                                pa.getKbk_OGV(), pa.getKbk_MFC()))
+                            .toSet()
+                            .map("- "::concat)
+                            .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
+                            .orElse("-"))
+                        .addCellWithValue(ofAll(
+                            ofAll(ss.getLichnoVOrgan(),
+                                ss.getLichnoVTerrOrgan(),
+                                ss.getLichnoVMFC(),
+                                ss.getPortalGosUslig(),
+                                ss.getPost())
+                                .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                .map(CMDField::getDescription),
+                            Option.of(ss.getOffSiteOrganaUslugi())
+                                .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAdressOffSite())),
+                            ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
+                                .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
+                            .flatMap(ignored -> ignored)
+                            .toSet()
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse("-"))
+                        .addCellWithValue(ofAll(  // 9
+                            ofAll(ss.getTerrOrgOnPaper(),
+                                ss.getInMFConPaperFrom(),
+                                ss.getInMFCinDocFromITOrg(),
+                                ss.getFromCabinetGosUslug(),
+                                ss.getFromGosUslugInELForm(),
+                                ss.getEmailDocWithElSignature(),
+                                ss.getPostResult())
+                                .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
+                                .map(CMDField::getDescription),
+                            Option.of(ss.getFromCabinetOffSite())
+                                .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteResult())),
+                            Option.of(ss.getFromOffSiteElDoc())
+                                .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                                .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteELDoc())),
+                            ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
+                                .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
+                            .flatMap(ignored -> ignored)
+                            .map("- "::concat)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        .addCellWithValue(service.getDescription()));
 
         }
         return workbook;
@@ -296,7 +305,10 @@ public class HSSFWorkbookTransformers {
 
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            List<SubServices> subServices = service.getSubServices();
+            List<SubServices> subServices = ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .toJavaList();
             for (SubServices subService : subServices) {
                 //перечень заявителей подуслуги
                 List<ApplicantsCircleSubservice> applicantList = subService.getFillDetailsApplicant();
@@ -530,7 +542,10 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach(subService -> {
+            ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .forEach(subService -> {
                     List<DescriptionDocumentsObslugi> subServiceInputDocs = subService.getFillDocSubservice().stream()
                         .collect(toList());
                     if (subServiceInputDocs.isEmpty()) {
@@ -600,8 +615,7 @@ public class HSSFWorkbookTransformers {
                                 .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                         );
                     }
-                }
-            );
+                });
         }
         return workbook;
     }
@@ -614,7 +628,10 @@ public class HSSFWorkbookTransformers {
 
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            List<SubServices> subServices = service.getSubServices();
+            List<SubServices> subServices = ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .toJavaList();
             for (SubServices subService : subServices) {
                 List<DescriptionDocumentsObslugi> docList = ofAll(subService)
                     .flatMap(SubServices::getFillDocSubservice)
@@ -781,7 +798,10 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach(subService -> {
+            ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .forEach(subService -> {
                     List<DescriptionDocumentsObslugi> subServiceResultDocs = subService.getFillResultSubservice().stream().collect(toList());
                     if (subServiceResultDocs.isEmpty()) {
                         Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
@@ -804,103 +824,101 @@ public class HSSFWorkbookTransformers {
                             .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
                     } else {
                         AtomicInteger docNum = new AtomicInteger(0);
-                        subServiceResultDocs.forEach(resDesc -> {
-                                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                    //1
-                                    .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
-                                    //2
-                                    .addCellWithValue(
-                                        Option.of(resDesc.getDescription()).orElse(NO))
-                                    //3
-                                    .addCellWithValue(
-                                        Option.of(resDesc.getRequirements()).orElse(NO))
-                                    //4
-                                    .addCellWithValue(
-                                        Option.of(resDesc.getCharacterOfResult())
-                                            .map(Lookup::getValue).orElse(NO)
-                                    )
-                                    //5
-                                    .addCellWithValue(
-                                        Option.of(resDesc.getDocForm())
-                                            .orElse("/")
-                                            .endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                    //6
-                                    .addCellWithValue(
-                                        Option.of(resDesc.getDocExample())
-                                            .orElse("/")
-                                            .endsWith("/") ? "Файл не приложен" : "Файл приложен")
-                                    //7
-                                    .addCellWithValue(
+                        subServiceResultDocs.forEach(resDesc ->
+                            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                //1
+                                .addCellWithValue(String.format("%d", docNum.incrementAndGet()))
+                                //2
+                                .addCellWithValue(
+                                    Option.of(resDesc.getDescription()).orElse(NO))
+                                //3
+                                .addCellWithValue(
+                                    Option.of(resDesc.getRequirements()).orElse(NO))
+                                //4
+                                .addCellWithValue(
+                                    Option.of(resDesc.getCharacterOfResult())
+                                        .map(Lookup::getValue).orElse(NO)
+                                )
+                                //5
+                                .addCellWithValue(
+                                    Option.of(resDesc.getDocForm())
+                                        .orElse("/")
+                                        .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //6
+                                .addCellWithValue(
+                                    Option.of(resDesc.getDocExample())
+                                        .orElse("/")
+                                        .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //7
+                                .addCellWithValue(
 
+                                    ofAll(
                                         ofAll(
-                                            ofAll(
-                                                resDesc.getTerrOrgOnPaper(),
-                                                resDesc.getInMFConPaperFrom(),
-                                                resDesc.getInMFCinDocFromITOrg(),
-                                                resDesc.getFromCabinetGosUslug(),
-                                                resDesc.getFromGosUslugInELForm())
-                                                .filter(field -> field.getValue().orElse(false))
-                                                .map(CMDField::getDescription),
-                                            Option.of(
-                                                resDesc.getFromCabinetOffSite())
-                                                .filter(field -> field.getValue()
-                                                    .filter(value -> value.equals(true))
-                                                    .isDefined())
-                                                .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteResult())),
-                                            Option.of(
-                                                resDesc.getFromOffSiteElDoc())
-                                                .filter(field -> field.getValue()
-                                                    .filter(value -> value.equals(true))
-                                                    .isDefined())
-                                                .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteELDoc())),
-                                            ofAll(
-                                                resDesc.getEmailDocWithElSignature(),
-                                                resDesc.getPostResult())
-                                                .filter(field -> field.getValue().orElse(false))
-                                                .map(CMDField::getDescription),
-                                            ofAll(
-                                                resDesc.getGetRezultSubServices())
-                                                .filter(field -> field != null)
-                                                .map(SubserviceResult::getDescription)
-                                        )
-                                            .flatMap(Function.identity())
-                                            .map("- "::concat)
-                                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                                            .orElse("-")
+                                            resDesc.getTerrOrgOnPaper(),
+                                            resDesc.getInMFConPaperFrom(),
+                                            resDesc.getInMFCinDocFromITOrg(),
+                                            resDesc.getFromCabinetGosUslug(),
+                                            resDesc.getFromGosUslugInELForm())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                        Option.of(
+                                            resDesc.getFromCabinetOffSite())
+                                            .filter(field -> field.getValue()
+                                                .filter(value -> value.equals(true))
+                                                .isDefined())
+                                            .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteResult())),
+                                        Option.of(
+                                            resDesc.getFromOffSiteElDoc())
+                                            .filter(field -> field.getValue()
+                                                .filter(value -> value.equals(true))
+                                                .isDefined())
+                                            .map(addr -> String.format("Адрес сайта %s", resDesc.getAddresOffSiteELDoc())),
+                                        ofAll(
+                                            resDesc.getEmailDocWithElSignature(),
+                                            resDesc.getPostResult())
+                                            .filter(field -> field.getValue().orElse(false))
+                                            .map(CMDField::getDescription),
+                                        ofAll(
+                                            resDesc.getGetRezultSubServices())
+                                            .filter(field -> field != null)
+                                            .map(SubserviceResult::getDescription)
                                     )
-                                    //8
-                                    .addCellWithValue(
-                                        Option.of(resDesc)
-                                            .filter(result ->
-                                                result.getNumberOfDays() != null &&
-                                                    result.getUnitOfMeasure1() != null)
-                                            .map(result -> String.format("%s %s",
-                                                result.getNumberOfDays(),
-                                                result.getUnitOfMeasure1().getValue()))
-                                            .orElse(NO)
-                                    )
-                                    //9
-                                    .addCellWithValue(
-                                        Option.of(resDesc)
-                                            .filter(result ->
-                                                result.getNumOfDays() != null &&
-                                                    result.getUnitOfMeas1() != null)
-                                            .map(result -> String.format("%s %s",
-                                                result.getNumOfDays(),
-                                                result.getUnitOfMeas1().getValue()))
-                                            .orElse(NO)
-                                    )
-                                    //10
-                                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                                    //11
-                                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
-                                    //12
-                                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
-                            }
+                                        .flatMap(Function.identity())
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                                        .orElse("-")
+                                )
+                                //8
+                                .addCellWithValue(
+                                    Option.of(resDesc)
+                                        .filter(result ->
+                                            result.getNumberOfDays() != null &&
+                                                result.getUnitOfMeasure1() != null)
+                                        .map(result -> String.format("%s %s",
+                                            result.getNumberOfDays(),
+                                            result.getUnitOfMeasure1().getValue()))
+                                        .orElse(NO)
+                                )
+                                //9
+                                .addCellWithValue(
+                                    Option.of(resDesc)
+                                        .filter(result ->
+                                            result.getNumOfDays() != null &&
+                                                result.getUnitOfMeas1() != null)
+                                        .map(result -> String.format("%s %s",
+                                            result.getNumOfDays(),
+                                            result.getUnitOfMeas1().getValue()))
+                                        .orElse(NO)
+                                )
+                                //10
+                                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                //11
+                                .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                                //12
+                                .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                         );
                     }
-                }
-            );
+                });
         }
         return workbook;
     }
@@ -913,101 +931,52 @@ public class HSSFWorkbookTransformers {
 
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach(subService -> {
-                List<ProcessesSubservices> processSubserviceList = subService.getFillProcessSubservice();
-                if (processSubserviceList.isEmpty()) {
-                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                        .addCellWithValue(SPACE) //1
-                        .addCellWithValue(NO_DATA) //2
-                        .addCellWithValue(SPACE) //3
-                        .addCellWithValue(SPACE) //4
-                        .addCellWithValue(SPACE) //5
-                        .addCellWithValue(SPACE) //6
-                        .addCellWithValue(SPACE) //7
-                        //8
-                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                        //9
-                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
-                        //10
-                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
-                        .addCellWithValue(NO_DATA); //11
-                } else {
-                    processSubserviceList.forEach(techProc -> {
-                        List<AdministrativeProcedures> adminProcedureList = techProc.getListAdminProcedures();
-                        List<DescriptiProcess> procedProcessList = techProc.getNamProcedProcess();
-                        Map<AdministrativeProcedures, List<DescriptiProcess>> procedureToProcessMap = new HashMap<>();
-                        for (AdministrativeProcedures adminProc : adminProcedureList) {
-                            List<DescriptiProcess> list = new ArrayList<>();
-                            for (DescriptiProcess processDesc : procedProcessList) {
-                                if (adminProc.equals(processDesc.getBelongAdminProced2())) {
-                                    list.add(processDesc);
+            ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .forEach(subService -> {
+                    List<ProcessesSubservices> processSubserviceList = subService.getFillProcessSubservice();
+                    if (processSubserviceList.isEmpty()) {
+                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                            .addCellWithValue(SPACE) //1
+                            .addCellWithValue(NO_DATA) //2
+                            .addCellWithValue(SPACE) //3
+                            .addCellWithValue(SPACE) //4
+                            .addCellWithValue(SPACE) //5
+                            .addCellWithValue(SPACE) //6
+                            .addCellWithValue(SPACE) //7
+                            //8
+                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                            //9
+                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                            //10
+                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                            .addCellWithValue(NO_DATA); //11
+                    } else {
+                        processSubserviceList.forEach(techProc -> {
+                            List<AdministrativeProcedures> adminProcedureList = techProc.getListAdminProcedures();
+                            List<DescriptiProcess> procedProcessList = techProc.getNamProcedProcess();
+                            Map<AdministrativeProcedures, List<DescriptiProcess>> procedureToProcessMap = new HashMap<>();
+                            for (AdministrativeProcedures adminProc : adminProcedureList) {
+                                List<DescriptiProcess> list = new ArrayList<>();
+                                for (DescriptiProcess processDesc : procedProcessList) {
+                                    if (adminProc.equals(processDesc.getBelongAdminProced2())) {
+                                        list.add(processDesc);
+                                    }
                                 }
+                                procedureToProcessMap.put(adminProc, list);
                             }
-                            procedureToProcessMap.put(adminProc, list);
-                        }
 
-                        procedureToProcessMap.forEach((adminProcedure, processList) -> {
-                            if (processList.isEmpty()) {
-                                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                    .addCellWithValue(SPACE) //1
-                                    .addCellWithValue(NO_DATA) //2
-                                    .addCellWithValue(SPACE) //3
-                                    .addCellWithValue(SPACE) //4
-                                    .addCellWithValue(SPACE) //5
-                                    .addCellWithValue(SPACE) //6
-                                    .addCellWithValue(SPACE) //7
-                                    //8
-                                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                                    //9
-                                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
-                                    //10
-                                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
-                                    //11
-                                    .addCellWithValue(Option.of(adminProcedure)
-                                        .map(AdministrativeProcedures::getDescription)
-                                        .orElse(NO_DATA));
-                            } else {
-                                processList.forEach(procedureProcess -> {
+                            procedureToProcessMap.forEach((adminProcedure, processList) -> {
+                                if (processList.isEmpty()) {
                                     Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                                        //1
-                                        .addCellWithValue(() ->
-                                            String.format("%d", processList.indexOf(procedureProcess) + 1)
-                                        )
-                                        //2
-                                        .addCellWithValue(
-                                            Option.of(procedureProcess.getDescription()).orElse(NO)
-                                        )
-                                        //3
-                                        .addCellWithValue(
-                                            Option.of(procedureProcess.getDetailsProcProcess()).orElse(NO)
-                                        )
-                                        //4
-                                        .addCellWithValue(
-                                            ofAll(
-                                                Option.of(procedureProcess.getPeriodApplyDays())
-                                                    .map(v -> String.format("%d", v))
-                                                    .orElse(EMPTY),
-                                                Option.of(procedureProcess.getLookupClock())
-                                                    .map(Lookup::getValue).orElse(EMPTY),
-                                                Option.of(procedureProcess.getLookupTimePeriod())
-                                                    .map(Lookup::getValue).orElse(EMPTY)
-                                            )
-                                                .filter(v -> !v.equals(EMPTY))
-                                                .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                                .orElse(NO)
-                                        )
-                                        //5
-                                        .addCellWithValue(
-                                            Option.of(procedureProcess.getIspProcedur())
-                                            .map(PerformersProcedure::getDescription)
-                                            .orElse(NO)
-                                        )
-                                        //6
-                                        .addCellWithValue(
-                                            Option.of(procedureProcess.getResources()).orElse(NO)
-                                        )
-                                        //TODO переделать, когда появится механизм получения сведений о файлах
-                                        .addCellWithValue("Файл не приложен") //7
+                                        .addCellWithValue(SPACE) //1
+                                        .addCellWithValue(NO_DATA) //2
+                                        .addCellWithValue(SPACE) //3
+                                        .addCellWithValue(SPACE) //4
+                                        .addCellWithValue(SPACE) //5
+                                        .addCellWithValue(SPACE) //6
+                                        .addCellWithValue(SPACE) //7
                                         //8
                                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                         //9
@@ -1018,12 +987,63 @@ public class HSSFWorkbookTransformers {
                                         .addCellWithValue(Option.of(adminProcedure)
                                             .map(AdministrativeProcedures::getDescription)
                                             .orElse(NO_DATA));
-                                });
-                            }
+                                } else {
+                                    processList.forEach(procedureProcess ->
+                                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                            //1
+                                            .addCellWithValue(() ->
+                                                String.format("%d", processList.indexOf(procedureProcess) + 1)
+                                            )
+                                            //2
+                                            .addCellWithValue(
+                                                Option.of(procedureProcess.getDescription()).orElse(NO)
+                                            )
+                                            //3
+                                            .addCellWithValue(
+                                                Option.of(procedureProcess.getDetailsProcProcess()).orElse(NO)
+                                            )
+                                            //4
+                                            .addCellWithValue(
+                                                ofAll(
+                                                    Option.of(procedureProcess.getPeriodApplyDays())
+                                                        .map(v -> String.format("%d", v))
+                                                        .orElse(EMPTY),
+                                                    Option.of(procedureProcess.getLookupClock())
+                                                        .map(Lookup::getValue).orElse(EMPTY),
+                                                    Option.of(procedureProcess.getLookupTimePeriod())
+                                                        .map(Lookup::getValue).orElse(EMPTY)
+                                                )
+                                                    .filter(v -> !v.equals(EMPTY))
+                                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                                    .orElse(NO)
+                                            )
+                                            //5
+                                            .addCellWithValue(
+                                                Option.of(procedureProcess.getIspProcedur())
+                                                    .map(PerformersProcedure::getDescription)
+                                                    .orElse(NO)
+                                            )
+                                            //6
+                                            .addCellWithValue(
+                                                Option.of(procedureProcess.getResources()).orElse(NO)
+                                            )
+                                            //TODO переделать, когда появится механизм получения сведений о файлах
+                                            .addCellWithValue("Файл не приложен") //7
+                                            //8
+                                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                            //9
+                                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                                            //10
+                                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                                            //11
+                                            .addCellWithValue(Option.of(adminProcedure)
+                                                .map(AdministrativeProcedures::getDescription)
+                                                .orElse(NO_DATA)));
+                                }
+                            });
                         });
-                    });
-                }
-            });
+                    }
+                });
         }
         return workbook;
     }
@@ -1035,112 +1055,115 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            service.getSubServices().forEach(subService ->
-                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                    //1
-                    .addCellWithValue(SPACE)
-                    //2
-                    .addCellWithValue(ofAll(
-                        Option.of(subService.getOfficialWebsite())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
-                        Option.of(subService.getPortalStateServices())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getOtherInformaTerms())
-                            .filter(Objects::nonNull)
-                            .map(ProductInformatSubser::getOtherWays)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //3
-                    .addCellWithValue(ofAll(
-                        Option.of(subService.getOfficialWebsite())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
-                        Option.of(subService.getPortalStateSrvices())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getMethoAppointBodies())
-                            .filter(Objects::nonNull)
-                            .map(OtheMethoAppointm::getOtherMethodAppointment)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //4
-                    .addCellWithValue(ofAll(
-                        ofAll(
-                            subService.getRequirPapeDocuments(),
-                            subService.getRequireDocumenPaper(),
-                            subService.getSubmiDocObtaiResult())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getOtherReception())
-                            .filter(Objects::nonNull)
-                            .map(WayReceptRequest::getOthRecRegisteringDocuments)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //5
-                    .addCellWithValue(ofAll(
-                        Option.of(subService.getOfficialWebProvidiService())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddrePayMethods())),
-                        Option.of(subService.getPublServPayMeth())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getOtheMethoPaymStaFee())
-                            .filter(Objects::nonNull)
-                            .map(OtheMethodPaymen::getMethoPymeStatFee)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //6
-                    .addCellWithValue(ofAll(
-                        Option.of(subService.getOfficlWebMetInform())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddresInformation())),
-                        ofAll(subService.getServicePortaInformation(),
-                            subService.getEmailApplicant())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getOthMeInforAboCourse())
-                            .filter(Objects::nonNull)
-                            .map(MethObtProgresInfo::getObtaInfoProgRequest)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //7
-                    .addCellWithValue(ofAll(
-                        Option.of(subService.getOfficlWebCompla())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(v -> String.format("Адрес сайта: %s", subService.getAddresComplaint())),
-                        ofAll(subService.getServicPortComplaints(),
-                            subService.getInfoSystEnsurDecisions())
-                            .filter(field -> field.getValue().orElse(false))
-                            .map(CMDField::getDescription),
-                        ofAll(subService.getOthFlinComplaint())
-                            .filter(Objects::nonNull)
-                            .map(OthWayFiliComplaint::getWayFilinComplaint)
-                            .filter(Objects::nonNull))
-                        .flatMap(identity())
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                        .orElse(NO))
-                    //8
-                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                    //9
-                    .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
-                    //10
-                    .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
-                    //11
-                    .addCellWithValue(String.format("%d", rowIdx.get()))
+            ofAll(service.getSubServices())
+                .append(service.getObjAppeal())
+                .filter(Objects::nonNull)
+                .forEach(subService ->
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        //1
+                        .addCellWithValue(SPACE)
+                        //2
+                        .addCellWithValue(ofAll(
+                            Option.of(subService.getOfficialWebsite())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
+                            Option.of(subService.getPortalStateServices())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getOtherInformaTerms())
+                                .filter(Objects::nonNull)
+                                .map(ProductInformatSubser::getOtherWays)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //3
+                        .addCellWithValue(ofAll(
+                            Option.of(subService.getOfficialWebsite())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(v -> String.format("Адрес сайта: %s", subService.getWebAddress())),
+                            Option.of(subService.getPortalStateSrvices())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getMethoAppointBodies())
+                                .filter(Objects::nonNull)
+                                .map(OtheMethoAppointm::getOtherMethodAppointment)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //4
+                        .addCellWithValue(ofAll(
+                            ofAll(
+                                subService.getRequirPapeDocuments(),
+                                subService.getRequireDocumenPaper(),
+                                subService.getSubmiDocObtaiResult())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getOtherReception())
+                                .filter(Objects::nonNull)
+                                .map(WayReceptRequest::getOthRecRegisteringDocuments)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //5
+                        .addCellWithValue(ofAll(
+                            Option.of(subService.getOfficialWebProvidiService())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddrePayMethods())),
+                            Option.of(subService.getPublServPayMeth())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getOtheMethoPaymStaFee())
+                                .filter(Objects::nonNull)
+                                .map(OtheMethodPaymen::getMethoPymeStatFee)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //6
+                        .addCellWithValue(ofAll(
+                            Option.of(subService.getOfficlWebMetInform())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(v -> String.format("Адрес сайта: %s", subService.getWebsitAddresInformation())),
+                            ofAll(subService.getServicePortaInformation(),
+                                subService.getEmailApplicant())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getOthMeInforAboCourse())
+                                .filter(Objects::nonNull)
+                                .map(MethObtProgresInfo::getObtaInfoProgRequest)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //7
+                        .addCellWithValue(ofAll(
+                            Option.of(subService.getOfficlWebCompla())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(v -> String.format("Адрес сайта: %s", subService.getAddresComplaint())),
+                            ofAll(subService.getServicPortComplaints(),
+                                subService.getInfoSystEnsurDecisions())
+                                .filter(field -> field.getValue().orElse(false))
+                                .map(CMDField::getDescription),
+                            ofAll(subService.getOthFlinComplaint())
+                                .filter(Objects::nonNull)
+                                .map(OthWayFiliComplaint::getWayFilinComplaint)
+                                .filter(Objects::nonNull))
+                            .flatMap(identity())
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
+                            .orElse(NO))
+                        //8
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        //9
+                        .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                        //10
+                        .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                        //11
+                        .addCellWithValue(String.format("%d", rowIdx.get()))
 
-            );
+                );
         }
         return workbook;
     }

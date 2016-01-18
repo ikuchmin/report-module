@@ -45,6 +45,8 @@ public class Service {
     private List<RefOrgGovemment> refOrgGovemment;
     @CMDBuildField(name = "NalichieApprovedTKMW")
     private List<DescriptionTKMW> nalichieApprovedTKMW;
+    @CMDBuildField(name = "objAppeal3")
+    private SubServices objAppeal;
 
 /*
     HaveQualityRating,
