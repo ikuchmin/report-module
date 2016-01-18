@@ -34,7 +34,8 @@ public class HSSFWorkbookTransformers {
     private static final String NO = "Нет";
     private static final String SPACE = " ";
     private static final String EMPTY = "";
-    public static final String NO_DATA = "Данные не заполнены";
+    private static final String NO_DATA = "Данные не заполнены";
+    private static final String FILE_IS_NOT_ATTACHED = "Файл не приложен";
 
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromMatrixToHSSFWorkbook(Re report, Matrix<Double> data) {
         // TODO: Возможно стоит как-то ограничить время на Future<V>::get
@@ -602,11 +603,11 @@ public class HSSFWorkbookTransformers {
                                 //6
                                 .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
                                 //7
-                                //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                .addCellWithValue(Option.of(docDesc.getFormDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //TODO: Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
                                 //8
-                                //TODO: Переделать, когда станет понятно, как определять отсутствие файла
-                                .addCellWithValue(Option.of(docDesc.getSampleDocument()).orElse("/").endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //TODO: Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
@@ -773,11 +774,11 @@ public class HSSFWorkbookTransformers {
                                     .orElse(NO)
                             )
                             //9
-                            //TODO изменить в соответствии с логикой получения файла
-                            .addCellWithValue("Файл не приложен")
+                            //TODO Переделать, когда появится механизм получения сведений о файлах
+                            .addCellWithValue(FILE_IS_NOT_ATTACHED)
                             //10
-                            //TODO изменить в соответствии с логикой получения файла
-                            .addCellWithValue("Файл не приложен")
+                            //TODO Переделать, когда появится механизм получения сведений о файлах
+                            .addCellWithValue(FILE_IS_NOT_ATTACHED)
                             //11
                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                             //12
@@ -840,15 +841,11 @@ public class HSSFWorkbookTransformers {
                                         .map(Lookup::getValue).orElse(NO)
                                 )
                                 //5
-                                .addCellWithValue(
-                                    Option.of(resDesc.getDocForm())
-                                        .orElse("/")
-                                        .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //TODO Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
                                 //6
-                                .addCellWithValue(
-                                    Option.of(resDesc.getDocExample())
-                                        .orElse("/")
-                                        .endsWith("/") ? "Файл не приложен" : "Файл приложен")
+                                //TODO Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
                                 //7
                                 .addCellWithValue(
 
@@ -1027,8 +1024,8 @@ public class HSSFWorkbookTransformers {
                                             .addCellWithValue(
                                                 Option.of(procedureProcess.getResources()).orElse(NO)
                                             )
-                                            //TODO переделать, когда появится механизм получения сведений о файлах
-                                            .addCellWithValue("Файл не приложен") //7
+                                            //TODO Переделать, когда появится механизм получения сведений о файлах
+                                            .addCellWithValue(FILE_IS_NOT_ATTACHED) //7
                                             //8
                                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                             //9

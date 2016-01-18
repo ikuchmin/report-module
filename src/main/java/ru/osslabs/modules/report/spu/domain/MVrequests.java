@@ -31,11 +31,15 @@ public class MVrequests {
     private Integer communionResponse;
     @CMDBuildField(name = "ComResponse")
     private Lookup<String> comResponse;
+/*  //FILE
     private Object replyFormMV;
+    //FILE
     private Object patternResponseMV;
+    //FILE
     @CMDBuildField(name = "FileFormInReqText")
     private Object fileFormInReqText;
+    //FILE
     @CMDBuildField(name = "FileFillPatText")
-    private Object fileFillPatText;
+    private Object fileFillPatText;*/
 
 }

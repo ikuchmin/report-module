@@ -39,10 +39,14 @@ public class DescriptionDocumentsObslugi {
     private List<RefCondit> refCondition;
     @CMDBuildField(name = "RequirementsDocument")
     private String requirementsDocument;
+/*
+    //FILE
     @CMDBuildField(name = "FormDocument")
     private String formDocument;
+    //FILE
     @CMDBuildField(name = "SampleDocument")
     private String sampleDocument;
+    */
 
     @CMDBuildField(name = "Requirements")
     private String requirements;
@@ -63,8 +67,12 @@ public class DescriptionDocumentsObslugi {
     private Lookup<String> unitOfMeasure1;
     private Integer numOfDays;
     private Lookup<String> unitOfMeas1;
+/*
+    //FILE
     private String docForm;
+    //FILE
     private String docExample;
+    */
 
     @CMDBuildField(name = "CategPersoSubservices")
     private List<ApplicantsCircleSubservice> categPersoSubservices;
