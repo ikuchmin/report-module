@@ -902,6 +902,7 @@ public class HSSFWorkbookTransformers {
                                     ofAll(
                                         ofAll(
                                             resDesc.getTerrOrgOnPaper(),
+                                            resDesc.getAuthoOnPaper(),
                                             resDesc.getInMFConPaperFrom(),
                                             resDesc.getInMFCinDocFromITOrg(),
                                             resDesc.getFromCabinetGosUslug(),

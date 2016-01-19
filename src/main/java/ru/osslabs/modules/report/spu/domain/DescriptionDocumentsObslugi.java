@@ -77,7 +77,8 @@ public class DescriptionDocumentsObslugi {
     private List<MVrequests> refMVRequests;
     @CMDBuildField(name = "LookupMethodGet")
     private Lookup<String> lookupMethodGet;
-
+    @CMDBuildField(name = "AuthoOnPaper")
+    private CMDField<Boolean> authoOnPaper;
 }
 
 
