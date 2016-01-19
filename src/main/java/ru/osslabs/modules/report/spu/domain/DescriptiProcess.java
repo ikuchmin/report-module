@@ -4,6 +4,8 @@ import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
 import ru.osslabs.modules.report.domain.Lookup;
 
+import java.util.List;
+
 /**
  * Created by Serge Kozyrev on 14.01.16.
  */
@@ -25,4 +27,6 @@ public class DescriptiProcess {
     private String resources;
     @CMDBuildField(name = "BelongAdminProced2")
     private AdministrativeProcedures belongAdminProced2;
+    @CMDBuildField(name = "FormsDocuments")
+    private List<DescriptionDocumentsObslugi> formsDocuments;
 }

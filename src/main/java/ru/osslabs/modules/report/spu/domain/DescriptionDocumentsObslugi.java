@@ -2,8 +2,7 @@ package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
-import ru.osslabs.modules.report.domain.CMDField;
-import ru.osslabs.modules.report.domain.Lookup;
+import ru.osslabs.modules.report.domain.*;
 
 import java.util.List;
 
@@ -39,14 +38,12 @@ public class DescriptionDocumentsObslugi {
     private List<RefCondit> refCondition;
     @CMDBuildField(name = "RequirementsDocument")
     private String requirementsDocument;
-/*
     //FILE
     @CMDBuildField(name = "FormDocument")
-    private String formDocument;
+    private FileList formDocument;
     //FILE
     @CMDBuildField(name = "SampleDocument")
-    private String sampleDocument;
-    */
+    private FileList sampleDocument;
 
     @CMDBuildField(name = "Requirements")
     private String requirements;
@@ -67,12 +64,10 @@ public class DescriptionDocumentsObslugi {
     private Lookup<String> unitOfMeasure1;
     private Integer numOfDays;
     private Lookup<String> unitOfMeas1;
-/*
     //FILE
-    private String docForm;
+    private FileList docForm;
     //FILE
-    private String docExample;
-    */
+    private FileList docExample;
 
     @CMDBuildField(name = "CategPersoSubservices")
     private List<ApplicantsCircleSubservice> categPersoSubservices;

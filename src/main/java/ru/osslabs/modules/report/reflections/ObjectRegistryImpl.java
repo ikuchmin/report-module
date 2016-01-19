@@ -7,15 +7,9 @@ import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.DataObjectList;
 import ru.osslabs.model.datasource.IData;
 import ru.osslabs.model.datasource.MetaObject;
-import ru.osslabs.modules.report.domain.CMDField;
-import ru.osslabs.modules.report.domain.Lookup;
+import ru.osslabs.modules.report.domain.*;
 
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
@@ -105,6 +99,8 @@ public class ObjectRegistryImpl implements ObjectRegistry {
                 .onFailure(e -> log.warning(() -> "For type ".concat(type.getType().getTypeName()).concat(" obj.getValue() is null.")
                         .concat(" Message: ").concat(e.getMessage())))
                 .map(v -> (Date)v));
+        //TODO временное решение
+        factoryMethods.put(FileList.class, (obj, type) -> Try.of(() -> new FileList((List)obj.getValue())));
     }
 
     /**

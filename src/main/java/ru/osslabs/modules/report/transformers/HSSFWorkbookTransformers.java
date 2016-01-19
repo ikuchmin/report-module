@@ -9,8 +9,7 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
-import ru.osslabs.modules.report.domain.CMDField;
-import ru.osslabs.modules.report.domain.Lookup;
+import ru.osslabs.modules.report.domain.*;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -35,6 +34,7 @@ public class HSSFWorkbookTransformers {
     private static final String SPACE = " ";
     private static final String EMPTY = "";
     private static final String NO_DATA = "Данные не заполнены";
+    private static final String FILE_IS_ATTACHED = "Файл приложен";
     private static final String FILE_IS_NOT_ATTACHED = "Файл не приложен";
 
     public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromMatrixToHSSFWorkbook(Re report, Matrix<Double> data) {
@@ -604,10 +604,22 @@ public class HSSFWorkbookTransformers {
                                 .addCellWithValue(Option.of(docDesc.getRequirementsDocument()).orElse(NO))
                                 //7
                                 //TODO: Переделать, когда появится механизм получения сведений о файлах
-                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                                .addCellWithValue(
+                                    Option.of(docDesc.getFormDocument())
+                                        .map(FileList::getFiles)
+                                        .filter(v -> !v.isEmpty())
+                                        .map(v -> FILE_IS_ATTACHED)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
                                 //8
                                 //TODO: Переделать, когда появится механизм получения сведений о файлах
-                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                                .addCellWithValue(
+                                    Option.of(docDesc.getSampleDocument())
+                                        .map(FileList::getFiles)
+                                        .filter(v -> !v.isEmpty())
+                                        .map(v -> FILE_IS_ATTACHED)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
@@ -775,10 +787,38 @@ public class HSSFWorkbookTransformers {
                             )
                             //9
                             //TODO Переделать, когда появится механизм получения сведений о файлах
-                            .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getFileFormInReqText)
+                                    .map(FileList::getFiles)
+                                    .map(v -> {
+                                        if (v.isEmpty()) {
+                                            return FILE_IS_NOT_ATTACHED;
+                                        } else {
+                                            return FILE_IS_ATTACHED;
+                                        }
+                                    })
+                                    .map("- "::concat)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(FILE_IS_NOT_ATTACHED)
+                            )
                             //10
                             //TODO Переделать, когда появится механизм получения сведений о файлах
-                            .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                            .addCellWithValue(
+                                ofAll(docDesc.getRefMVRequests())
+                                    .map(MVrequests::getFileFillPatText)
+                                    .map(FileList::getFiles)
+                                    .map(v -> {
+                                        if (v.isEmpty()) {
+                                            return FILE_IS_NOT_ATTACHED;
+                                        } else {
+                                            return FILE_IS_ATTACHED;
+                                        }
+                                    })
+                                    .map("- "::concat)
+                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                    .orElse(FILE_IS_NOT_ATTACHED)
+                            )
                             //11
                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                             //12
@@ -807,8 +847,7 @@ public class HSSFWorkbookTransformers {
                     if (subServiceResultDocs.isEmpty()) {
                         Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                             .addCellWithValue(SPACE) //1
-                            //2
-                            .addCellWithValue(NO_DATA)
+                            .addCellWithValue(NO_DATA) //2
                             .addCellWithValue(SPACE) //3
                             .addCellWithValue(SPACE) //4
                             .addCellWithValue(SPACE) //5
@@ -842,13 +881,24 @@ public class HSSFWorkbookTransformers {
                                 )
                                 //5
                                 //TODO Переделать, когда появится механизм получения сведений о файлах
-                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                                .addCellWithValue(
+                                    Option.of(resDesc.getDocForm())
+                                        .map(FileList::getFiles)
+                                        .filter(v -> !v.isEmpty())
+                                        .map(v -> FILE_IS_ATTACHED)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
                                 //6
                                 //TODO Переделать, когда появится механизм получения сведений о файлах
-                                .addCellWithValue(FILE_IS_NOT_ATTACHED)
+                                .addCellWithValue(
+                                    Option.of(resDesc.getDocExample())
+                                        .map(FileList::getFiles)
+                                        .filter(v -> !v.isEmpty())
+                                        .map(v -> FILE_IS_ATTACHED)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
                                 //7
                                 .addCellWithValue(
-
                                     ofAll(
                                         ofAll(
                                             resDesc.getTerrOrgOnPaper(),
@@ -1024,8 +1074,33 @@ public class HSSFWorkbookTransformers {
                                             .addCellWithValue(
                                                 Option.of(procedureProcess.getResources()).orElse(NO)
                                             )
+                                            //7
                                             //TODO Переделать, когда появится механизм получения сведений о файлах
-                                            .addCellWithValue(FILE_IS_NOT_ATTACHED) //7
+                                            .addCellWithValue(
+                                                ofAll(procedureProcess.getFormsDocuments())
+                                                    .map(docDesc -> {
+                                                        String cellText = EMPTY;
+                                                        Option<FileList> docFormOptional = Option.of(docDesc.getDocForm());
+                                                        cellText += docFormOptional
+                                                            .map(FileList::getFiles)
+                                                            .filter(List::isEmpty)
+                                                            .map(v -> "Форма приложена")
+                                                            .orElse("Форма не приложена");
+                                                        if (!cellText.isEmpty()) {
+                                                            cellText += "\n";
+                                                        }
+                                                        Option<FileList> docExmapleOptionoal = Option.of(docDesc.getDocExample());
+                                                        cellText += docExmapleOptionoal
+                                                            .map(FileList::getFiles)
+                                                            .filter(List::isEmpty)
+                                                            .map(v -> "Образец приложен")
+                                                            .orElse("Образец не приложен");
+
+                                                        return cellText;
+                                                    })
+                                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                                    .orElse(FILE_IS_NOT_ATTACHED)
+                                            )
                                             //8
                                             .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                             //9

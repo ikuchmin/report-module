@@ -1,11 +1,9 @@
 package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
-import ru.osslabs.model.document.DmsFile;
 import ru.osslabs.modules.report.CMDBuildField;
-import ru.osslabs.modules.report.domain.Lookup;
+import ru.osslabs.modules.report.domain.*;
 
-import java.util.List;
 
 /**
  * Created by Serge Kozyrev on 12.01.16.
@@ -35,11 +33,12 @@ public class MVrequests {
     private Object replyFormMV;
     //FILE
     private Object patternResponseMV;
+*/
     //FILE
     @CMDBuildField(name = "FileFormInReqText")
-    private Object fileFormInReqText;
+    private FileList fileFormInReqText;
     //FILE
     @CMDBuildField(name = "FileFillPatText")
-    private Object fileFillPatText;*/
+    private FileList fileFillPatText;
 
 }
