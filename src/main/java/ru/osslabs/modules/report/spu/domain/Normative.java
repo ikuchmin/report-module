@@ -21,6 +21,7 @@ public class Normative {
     @CMDBuildField(name = "DateNPA")
     private Date dateNPA;
     //    private String ogv_NPA_desc;
+    @CMDBuildField(name = "Ogv_NPA")
     private List<OgvGovernment> ogv_NPA;
     @CMDBuildField(name = "TYPE_NPA_Desc")
     private String tYPE_NPA_Desc;

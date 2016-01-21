@@ -106,28 +106,26 @@ public class HSSFWorkbookTransformers {
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Номер услуги в федеральном реестре")
-                .addCellWithValue(
-                    Option.of(service.getFederalNumberOfService())
-                        .map(v -> String.format("%s", v))
-                        .orElse(NO)
-                );
+                .addCellWithValue(Option.of(service.getFederalNumberOfService()).orElse(NO));
             //3
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Полное наименование услуги")
-                .addCellWithValue(String.format("%s", service.getDescription()));
+                .addCellWithValue(Option.of(service.getDescription()).orElse(NO));
             //4
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Краткое наименование услуги")
-                .addCellWithValue(String.format("%s", service.getNameService()));
+                .addCellWithValue(Option.of(service.getNameService()).orElse(NO));
             //5
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Административный регламент предоставления государственной услуги")
                 .addCellWithValue(ofAll(service.getARegl())
-                    .map(npa -> String.format(RUSSIAN,
-                        "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s.",
+                    .map(npa -> String.format(RUSSIAN, "%1$s\n" +
+                            "орган власти, утвердивший административный регламент: %5$s.\n" +
+                            "от %2$td.%2$tm.%2$tY № %3$s\n" +
+                            "%4$s",
                         ofAll(npa.getTYPE_NPA())
                             .headOption()
                             .map(NormativeType::getDescription)
@@ -139,9 +137,8 @@ public class HSSFWorkbookTransformers {
                             .headOption()
                             .map(OgvGovernment::getFullName)
                             .orElse(SPACE)))
-                    .map("- "::concat)
                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                    .orElse("-"));
+                    .orElse(NO));
             //6
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
@@ -152,12 +149,12 @@ public class HSSFWorkbookTransformers {
                     .map(SubServices::getDescription)
                     .map("- "::concat)
                     .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                    .orElse("-"));
+                    .orElse(NO));
             //7
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Способы оценки качества предоставления государственной услуги")
-                .addCellWithValue(ofAll(  // 9
+                .addCellWithValue(ofAll(
                     ofAll(service.getRadiotelephone(),
                         service.getTerminal(),
                         service.getPortalPublicServices(),
@@ -171,7 +168,7 @@ public class HSSFWorkbookTransformers {
                         .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
                     .flatMap(ignored -> ignored)
                     .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"));
+                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO));
         }
         return workbook;
     }
