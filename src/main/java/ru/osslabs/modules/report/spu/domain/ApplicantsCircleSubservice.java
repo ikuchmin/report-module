@@ -2,7 +2,7 @@ package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
-import ru.osslabs.modules.report.domain.CMDField;
+import ru.osslabs.modules.report.domain.*;
 
 import java.util.List;
 
@@ -17,6 +17,8 @@ public class ApplicantsCircleSubservice {
     private List<PersonsEntitledReceivePodology> applicantsCategorySubservice;
     @CMDBuildField(name = "ClaimRepreApplicant")
     private CMDField<Boolean> claimRepreApplicant;
+    @CMDBuildField(name = "PossibilityApplication")
+    private Lookup<String> possibilityApplication;
     @CMDBuildField(name = "PerStatemBehApplicant")
     private List<DescribeRepresentativesApplicants> perStatemBehApplicant;
 }

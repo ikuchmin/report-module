@@ -428,17 +428,17 @@ public class HSSFWorkbookTransformers {
                                 //2
                                 .addCellWithValue(SPACE)
                                 //3
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(NO)
                                 //4
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(NO)
                                 //5
                                 .addCellWithValue(SPACE)
                                 //6
                                 .addCellWithValue(SPACE)
                                 //7
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(NO)
                                 //8
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(NO)
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
@@ -454,9 +454,19 @@ public class HSSFWorkbookTransformers {
                                 //13
                                 .addCellWithValue(SPACE)
                                 //14
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(
+                                    Option.of(applicantDesc.getPossibilityApplication())
+                                        .map(Lookup::getValue)
+                                        .orElse("Отсутствует")
+                                )
                                 //15
-                                .addCellWithValue(SPACE)
+                                .addCellWithValue(
+                                    ofAll(applicantDesc.getPerStatemBehApplicant())
+                                        .flatMap(DescribeRepresentativesApplicants::getCatPerEntiRecObslu)
+                                        .map(Representatives::getDescription)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
                                 //16
                                 .addCellWithValue(SPACE);
                         } else {
@@ -538,10 +548,8 @@ public class HSSFWorkbookTransformers {
                                         .orElse(NO))
                                     //14
                                     .addCellWithValue(
-                                        Option.of(
-                                            applicantDesc.getClaimRepreApplicant())
-                                            .filter(field -> field.getValue().orElse(false))
-                                            .map(v -> "Имеется")
+                                        Option.of(applicantDesc.getPossibilityApplication())
+                                            .map(Lookup::getValue)
                                             .orElse("Отсутствует")
                                     )
                                     //15
@@ -708,9 +716,9 @@ public class HSSFWorkbookTransformers {
                         .addCellWithValue(Option.of(subService.getDescription()).orElse(NO));
                 } else {
                     ofAll(docList).forEach(docDesc ->
-                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                            .addCellWithValue(SPACE) //1
-                            //2
+                            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                                .addCellWithValue(SPACE) //1
+                                //2
                             .addCellWithValue(() -> {
                                 String cellText = EMPTY;
                                 List<DescriptionTKMW> approvedTKMW = service.getNalichieApprovedTKMW();
@@ -740,128 +748,128 @@ public class HSSFWorkbookTransformers {
 
                                 return cellText;
                             })
-                            //3
-                            .addCellWithValue(Option.of(docDesc.getDescription()).orElse(NO))
-                            //4
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getInformationContent)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(NO)
-                            )
-                            //5
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getNamOrgGuiInteRequest)
-                                    .map(OrgGovernment::getFullname)
-                                    .map("- "::concat)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(NO)
-                            )
-                            //6
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getMamAuthSeInteReq)
-                                    .map(OrgGovernment::getFullname)
-                                    .map("- "::concat)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(NO)
-                            )
-                            //7
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getSidElectService)
-                                    .map("- "::concat)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(NO)
-                            )
-                            //8
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(request -> {
-                                        String cellText = EMPTY;
-                                        if (request.getRequestExecutionTerm() != null && request.getUnitAllrequest() != null) {
-                                            if (!cellText.equals(EMPTY)) {
-                                                cellText += "\n";
+                                //3
+                                .addCellWithValue(Option.of(docDesc.getDescription()).orElse(NO))
+                                //4
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getInformationContent)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
+                                //5
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getNamOrgGuiInteRequest)
+                                        .map(OrgGovernment::getFullname)
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
+                                //6
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getMamAuthSeInteReq)
+                                        .map(OrgGovernment::getFullname)
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
+                                //7
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getSidElectService)
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
+                                //8
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(request -> {
+                                            String cellText = EMPTY;
+                                            if (request.getRequestExecutionTerm() != null && request.getUnitAllrequest() != null) {
+                                                if (!cellText.equals(EMPTY)) {
+                                                    cellText += "\n";
+                                                }
+                                                cellText += String.format("Общий срок осуществления межведомственного информационного взаимодействия\n%1$d %2$s",
+                                                    request.getRequestExecutionTerm(),
+                                                    request.getUnitAllrequest().getValue());
                                             }
-                                            cellText += String.format("Общий срок осуществления межведомственного информационного взаимодействия\n%1$d %2$s",
-                                                request.getRequestExecutionTerm(),
-                                                request.getUnitAllrequest().getValue());
-                                        }
-                                        if (request.getRequestingMV() != null && request.getUnitrequestingMV() != null) {
-                                            if (!cellText.equals(EMPTY)) {
-                                                cellText += "\n";
-                                            }
-                                            cellText += String.format("Сроки направления межведомственного запроса\n%1$s %2$s",
-                                                request.getRequestingMV(),
-                                                request.getUnitrequestingMV().getValue());
+                                            if (request.getRequestingMV() != null && request.getUnitrequestingMV() != null) {
+                                                if (!cellText.equals(EMPTY)) {
+                                                    cellText += "\n";
+                                                }
+                                                cellText += String.format("Сроки направления межведомственного запроса\n%1$s %2$s",
+                                                    request.getRequestingMV(),
+                                                    request.getUnitrequestingMV().getValue());
 
-                                        }
-                                        if (request.getDirectionResponse() != null && request.getUnitdirectionResponse() != null) {
-                                            if (!cellText.equals(EMPTY)) {
-                                                cellText += "\n";
                                             }
-                                            cellText += String.format("Сроки направления ответа на межведомственный запрос\n%1$s %2$s",
-                                                request.getDirectionResponse(),
-                                                request.getUnitdirectionResponse().getValue());
+                                            if (request.getDirectionResponse() != null && request.getUnitdirectionResponse() != null) {
+                                                if (!cellText.equals(EMPTY)) {
+                                                    cellText += "\n";
+                                                }
+                                                cellText += String.format("Сроки направления ответа на межведомственный запрос\n%1$s %2$s",
+                                                    request.getDirectionResponse(),
+                                                    request.getUnitdirectionResponse().getValue());
 
-                                        }
-                                        if (request.getCommunionResponse() != null && request.getComResponse() != null) {
-                                            if (!cellText.equals(EMPTY)) {
-                                                cellText += "\n";
                                             }
-                                            cellText += String.format("Сроки приобщения документов/сведений, " +
-                                                    "полученных в рамках межведомственного информационного взаимодействия, " +
-                                                    "к личному делу заявителя\n%1$s %2$s",
-                                                request.getCommunionResponse(),
-                                                request.getComResponse().getValue());
+                                            if (request.getCommunionResponse() != null && request.getComResponse() != null) {
+                                                if (!cellText.equals(EMPTY)) {
+                                                    cellText += "\n";
+                                                }
+                                                cellText += String.format("Сроки приобщения документов/сведений, " +
+                                                        "полученных в рамках межведомственного информационного взаимодействия, " +
+                                                        "к личному делу заявителя\n%1$s %2$s",
+                                                    request.getCommunionResponse(),
+                                                    request.getComResponse().getValue());
 
-                                        }
-                                        return cellText;
-                                    })
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(NO)
-                            )
-                            //9
-                            //TODO Переделать, когда появится механизм получения сведений о файлах
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getFileFormInReqText)
-                                    .map(FileList::getFiles)
-                                    .map(v -> {
-                                        if (v.isEmpty()) {
-                                            return FILE_IS_NOT_ATTACHED;
-                                        } else {
-                                            return FILE_IS_ATTACHED;
-                                        }
-                                    })
-                                    .map("- "::concat)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(FILE_IS_NOT_ATTACHED)
-                            )
-                            //10
-                            //TODO Переделать, когда появится механизм получения сведений о файлах
-                            .addCellWithValue(
-                                ofAll(docDesc.getRefMVRequests())
-                                    .map(MVrequests::getFileFillPatText)
-                                    .map(FileList::getFiles)
-                                    .map(v -> {
-                                        if (v.isEmpty()) {
-                                            return FILE_IS_NOT_ATTACHED;
-                                        } else {
-                                            return FILE_IS_ATTACHED;
-                                        }
-                                    })
-                                    .map("- "::concat)
-                                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                    .orElse(FILE_IS_NOT_ATTACHED)
-                            )
-                            //11
-                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                            //12
-                            .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
-                            //13
-                            .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
+                                            }
+                                            return cellText;
+                                        })
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(NO)
+                                )
+                                //9
+                                //TODO Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getFileFormInReqText)
+                                        .map(FileList::getFiles)
+                                        .map(v -> {
+                                            if (v.isEmpty()) {
+                                                return FILE_IS_NOT_ATTACHED;
+                                            } else {
+                                                return FILE_IS_ATTACHED;
+                                            }
+                                        })
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
+                                //10
+                                //TODO Переделать, когда появится механизм получения сведений о файлах
+                                .addCellWithValue(
+                                    ofAll(docDesc.getRefMVRequests())
+                                        .map(MVrequests::getFileFillPatText)
+                                        .map(FileList::getFiles)
+                                        .map(v -> {
+                                            if (v.isEmpty()) {
+                                                return FILE_IS_NOT_ATTACHED;
+                                            } else {
+                                                return FILE_IS_ATTACHED;
+                                            }
+                                        })
+                                        .map("- "::concat)
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                                        .orElse(FILE_IS_NOT_ATTACHED)
+                                )
+                                //11
+                                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                                //12
+                                .addCellWithValue(Option.of(service.getDescription()).orElse(NO))
+                                //13
+                                .addCellWithValue(Option.of(subService.getDescription()).orElse(NO))
                     );
                 }
             }
