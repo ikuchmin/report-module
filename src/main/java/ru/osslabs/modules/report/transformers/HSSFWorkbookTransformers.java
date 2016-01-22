@@ -1,7 +1,7 @@
 package ru.osslabs.modules.report.transformers;
 
 import javaslang.Tuple2;
-import javaslang.control.Option;
+import javaslang.control.*;
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
@@ -184,35 +184,68 @@ public class HSSFWorkbookTransformers {
             ofAll(service.getSubServices())
                 .append(service.getObjAppeal())
                 .filter(Objects::nonNull)
-                .forEach((ss) ->
+                .forEach((ss) -> {
                     Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        //1
                         .addCellWithValue(String.format("%d", rowIdx.get())) // If you confuse, which number was row. Here we see rowIndx + 1 because in Row.of we saw rowIdx.getAndIncrement()
+                        //2
                         .addCellWithValue(Option.of(ss.getDescription())
                             .orElse(NO))
+                        //3
                         .addCellWithValue(Option.of(ss.getPeriodsubservice())
                             .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
                             .orElse(NO))
+                        //4
                         .addCellWithValue(Option.of(ss.getPeriodSubservice_ExTerr())
                             .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice_ExTer().getValue()))
                             .orElse(NO))
+                        //5
                         .addCellWithValue(ofAll(ss.getReject_noRecept())
                             .map(Rejection::getDescription)
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
+                        //6
                         .addCellWithValue(ofAll(ss.getRejection_noProv())
                             .map(Rejection::getDescription)
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
+                        //7
                         .addCellWithValue(ofAll(ss.getRejection_noAct())
                             .map(Rejection::getDescription)
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
-                        .addCellWithValue(Option.of(ss.getSuspension_days())
-                            .map((val) -> String.format(RUSSIAN, "%d %s", ss.getSuspension_days(), ss.getFormSuspension_days().getValue()))
-                            .orElse(NO))
+                        //8
+                        .addCellWithValue(() -> {
+                            String period = null;
+                            String units = null;
+
+                            Option<Rejection> rejectionOption = ofAll(ss.getRejection_noAct()).headOption();
+                            if (rejectionOption.isDefined()) {
+                                Rejection rejection = rejectionOption.get();
+                                period = rejection.getPeriodSuspension();
+                                units = Option.of(rejection.getUnitTerms()).map(Lookup::getValue).orElse(null);
+                            }
+
+
+                            if (period == null && units == null) {
+                                period = Option.of(ss.getSuspension_days())
+                                    .map(String::valueOf)
+                                    .orElse(EMPTY);
+                                units = Option.of(ss.getFormSuspension_days())
+                                    .map(Lookup::getValue)
+                                    .orElse(EMPTY);
+                            }
+                            String cellText = ofAll(period, units)
+                                .filter(v -> !v.isEmpty())
+                                .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSpace)
+                                .orElse(NO);
+
+                            return cellText;
+                        })
+                        //9
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2())
                             .map((p) ->
                                 String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб.",
@@ -221,6 +254,7 @@ public class HSSFWorkbookTransformers {
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
+                        //10
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
                             .flatMap(p -> ofAll(p.getPayment_npa())
                                 .map((npa) -> String.format(RUSSIAN,
@@ -241,6 +275,7 @@ public class HSSFWorkbookTransformers {
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse("-"))
+                        //11
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
                             .map(pa -> String.format(RUSSIAN,
                                 "КБК при обращении в орган власти: %s. КБК при обращении в МФЦ: %s",
@@ -249,6 +284,7 @@ public class HSSFWorkbookTransformers {
                             .map("- "::concat)
                             .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
                             .orElse("-"))
+                        //12
                         .addCellWithValue(ofAll(
                             ofAll(ss.getLichnoVOrgan(),
                                 ss.getLichnoVTerrOrgan(),
@@ -267,8 +303,10 @@ public class HSSFWorkbookTransformers {
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse("-"))
-                        .addCellWithValue(ofAll(  // 9
+                        //13
+                        .addCellWithValue(ofAll(
                             ofAll(ss.getTerrOrgOnPaper(),
+                                ss.getAuthorityPaper(),
                                 ss.getInMFConPaperFrom(),
                                 ss.getInMFCinDocFromITOrg(),
                                 ss.getFromCabinetGosUslug(),
@@ -285,12 +323,14 @@ public class HSSFWorkbookTransformers {
                                 .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAddresOffSiteELDoc())),
                             ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                            .flatMap(ignored -> ignored)
+                            .flatMap(Function.identity())
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
+                        //14
                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
-                        .addCellWithValue(service.getDescription()));
-
+                        //15
+                        .addCellWithValue(service.getDescription());
+                });
         }
         return workbook;
     }
@@ -1244,5 +1284,9 @@ public class HSSFWorkbookTransformers {
 
     public static String joiningWithSemicolonAndNewLine(String acc, String ps) {
         return acc.concat(";\n").concat(ps);
+    }
+
+    public static String joiningWithSpace(String acc, String ps) {
+        return acc.concat(" ").concat(ps);
     }
 }

@@ -52,6 +52,7 @@ public class SubServices {
     private Boolean otherMeth;
     private List<SebserviceAppeal> appealSubServices;
     private CMDField<Boolean> terrOrgOnPaper;
+    private CMDField<Boolean> authorityPaper;
     private CMDField<Boolean> inMFConPaperFrom;
     private CMDField<Boolean> inMFCinDocFromITOrg;
     private CMDField<Boolean> fromCabinetGosUslug;
