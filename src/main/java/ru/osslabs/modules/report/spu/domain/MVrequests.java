@@ -17,7 +17,7 @@ public class MVrequests {
     private OrgGovernment namOrgGuiInteRequest;
     @CMDBuildField(name = "NamAuthSeInteReq3")
     private OrgGovernment mamAuthSeInteReq;
-    @CMDBuildField(name = "SIDElectService")
+    @CMDBuildField(name = "SIDElectService1")
     private String sidElectService;
     @CMDBuildField(name = "RequestExecutionTerm")
     private Integer requestExecutionTerm;

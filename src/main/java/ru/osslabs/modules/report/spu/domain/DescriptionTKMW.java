@@ -14,4 +14,6 @@ public class DescriptionTKMW {
     private String nameTKMW;
     @CMDBuildField(name = "TypDocApprovKMW1")
     private List<DirectTKMW> typDocApprovKMW1;
+    @CMDBuildField(name = "TypDoTKMW2")
+    private String typDoTKMW;
 }
