@@ -33,6 +33,7 @@ public class HSSFWorkbookTransformers {
     private static final String NO = "Нет";
     private static final String SPACE = " ";
     private static final String EMPTY = "";
+    private static final String HYPHEN = "-";
     private static final String NO_DATA = "Данные не заполнены";
     private static final String FILE_IS_ATTACHED = "Файл приложен";
     private static final String FILE_IS_NOT_ATTACHED = "Файл не приложен";
@@ -288,7 +289,7 @@ public class HSSFWorkbookTransformers {
                             .toSet()
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                            .orElse("-"))
+                            .orElse(HYPHEN))
                         //11
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.3
                             .map(pa -> String.format(RUSSIAN,
@@ -297,7 +298,7 @@ public class HSSFWorkbookTransformers {
                             .toSet()
                             .map("- "::concat)
                             .reduceLeftOption((acc, ps) -> acc.concat("\n").concat(ps))
-                            .orElse("-"))
+                            .orElse(HYPHEN))
                         //12
                         .addCellWithValue(ofAll(
                             ofAll(ss.getLichnoVOrgan(),
@@ -316,7 +317,7 @@ public class HSSFWorkbookTransformers {
                             .toSet()
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                            .orElse("-"))
+                            .orElse(HYPHEN))
                         //13
                         .addCellWithValue(ofAll(
                             ofAll(ss.getTerrOrgOnPaper(),
@@ -339,7 +340,7 @@ public class HSSFWorkbookTransformers {
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
                             .flatMap(Function.identity())
                             .map("- "::concat)
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-"))
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(HYPHEN))
                         //14
                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                         //15
@@ -450,9 +451,9 @@ public class HSSFWorkbookTransformers {
                                 //6
                                 .addCellWithValue(SPACE)
                                 //7
-                                .addCellWithValue(NO)
+                                .addCellWithValue(HYPHEN)
                                 //8
-                                .addCellWithValue(NO)
+                                .addCellWithValue(HYPHEN)
                                 //9
                                 .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                                 //10
@@ -479,7 +480,7 @@ public class HSSFWorkbookTransformers {
                                         .flatMap(DescribeRepresentativesApplicants::getCatPerEntiRecObslu)
                                         .map(Representatives::getDescription)
                                         .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                        .orElse(NO)
+                                        .orElse(HYPHEN)
                                 )
                                 //16
                                 .addCellWithValue(SPACE);
@@ -529,9 +530,9 @@ public class HSSFWorkbookTransformers {
                                             return Option.of(secDocDesc)
                                                 .map(DescriptionDocumentsObslugi::getDocument)
                                                 .map(Document::getDescription)
-                                                .orElse(NO);
+                                                .orElse(HYPHEN);
                                         }
-                                        return NO;
+                                        return HYPHEN;
                                     })
                                     //8
                                     .addCellWithValue(() -> {
@@ -539,9 +540,9 @@ public class HSSFWorkbookTransformers {
                                             DescriptionDocumentsObslugi secDocDesc = finalSecondaryList.get(docNum);
                                             return Option.of(secDocDesc)
                                                 .map(DescriptionDocumentsObslugi::getRequirementsDocument)
-                                                .orElse(NO);
+                                                .orElse(HYPHEN);
                                         }
-                                        return NO;
+                                        return HYPHEN;
                                     })
                                     //9
                                     .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
@@ -572,7 +573,7 @@ public class HSSFWorkbookTransformers {
                                             .flatMap(DescribeRepresentativesApplicants::getCatPerEntiRecObslu)
                                             .map(Representatives::getDescription)
                                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                                            .orElse(NO)
+                                            .orElse(HYPHEN)
                                     )
                                     //16
                                     .addCellWithValue(() -> {
@@ -652,7 +653,7 @@ public class HSSFWorkbookTransformers {
                                         ofAll(docDesc.getActionsDocument()).map(ActionsDocument::getDescription)
                                     )
                                         .flatMap(identity())
-                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse("-")
+                                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(HYPHEN)
                                 )
                                 //5
                                 .addCellWithValue(
@@ -983,7 +984,7 @@ public class HSSFWorkbookTransformers {
                                         .flatMap(Function.identity())
                                         .map("- "::concat)
                                         .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSemicolonAndNewLine)
-                                        .orElse("-")
+                                        .orElse(HYPHEN)
                                 )
                                 //8
                                 .addCellWithValue(
