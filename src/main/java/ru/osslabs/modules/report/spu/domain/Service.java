@@ -2,7 +2,7 @@ package ru.osslabs.modules.report.spu.domain;
 
 import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
-import ru.osslabs.modules.report.domain.CMDField;
+import ru.osslabs.modules.report.domain.*;
 
 import java.util.List;
 
@@ -47,18 +47,14 @@ public class Service {
     private List<DescriptionTKMW> nalichieApprovedTKMW;
     @CMDBuildField(name = "objAppeal3")
     private SubServices objAppeal;
+    private Lookup<String> havesubservices;
 
 /*
     HaveQualityRating,
-    NalichieApprovedTKMW,
-    RefQualityRating,
-    RefOrgGovemment,
     typicalAgreement,
     AReglLookUp,
     tkmvlLookUp,
-    havesubservices,
     otherMethods,
     haveTypicalAgreement,
-    objAppeal3,
 */
 }

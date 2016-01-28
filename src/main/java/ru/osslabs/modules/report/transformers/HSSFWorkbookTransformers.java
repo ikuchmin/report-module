@@ -144,32 +144,45 @@ public class HSSFWorkbookTransformers {
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Перечень «подуслуг»")
-                .addCellWithValue(ofAll(service.getSubServices())
-                    .append(service.getObjAppeal())
-                    .filter(v -> v != null)
-                    .map(SubServices::getDescription)
-                    .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                    .orElse(NO));
+                .addCellWithValue(() -> {
+                    Lookup<String> haveSubServices = service.getHavesubservices();
+                    if (haveSubServices == null) {
+                        return NO;
+                    }
+                    if (haveSubServices.getValue().equals("Да")) {
+                        AtomicInteger index = new AtomicInteger();
+                        return ofAll(service.getSubServices())
+                            .filter(Objects::nonNull)
+                            .map(SubServices::getDescription)
+                            .map(v -> String.format("%d. %s", index.incrementAndGet(), v))
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
+                            .orElse(NO);
+                    } else {
+                        return NO;
+                    }
+                });
             //7
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Способы оценки качества предоставления государственной услуги")
-                .addCellWithValue(ofAll(
-                    ofAll(service.getRadiotelephone(),
-                        service.getTerminal(),
-                        service.getPortalPublicServices(),
-                        service.getSiteVashControl())
-                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
-                        .map(CMDField::getDescription),
-                    Option.of(service.getOfficialSite())
-                        .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                        .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
-                    ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                    .flatMap(ignored -> ignored)
-                    .map("- "::concat)
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO));
+                .addCellWithValue(() -> {
+                    AtomicInteger index = new AtomicInteger();
+                    return ofAll(
+                        ofAll(service.getRadiotelephone(),
+                            service.getTerminal(),
+                            service.getPortalPublicServices(),
+                            service.getSiteVashControl())
+                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
+                            .map(CMDField::getDescription),
+                        Option.of(service.getOfficialSite())
+                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
+                            .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
+                        ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
+                        .flatMap(Function.identity())
+                        .map(v -> String.format("%d. %s", index.incrementAndGet(), v))
+                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO);
+                });
         }
         return workbook;
     }
