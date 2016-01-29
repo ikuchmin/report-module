@@ -21,12 +21,12 @@ public class Normative {
     @CMDBuildField(name = "DateNPA")
     private Date dateNPA;
     //    private String ogv_NPA_desc;
-    @CMDBuildField(name = "Ogv_NPA")
-    private List<OgvGovernment> ogv_NPA;
+    @CMDBuildField(name = "Ogv_NPA1")
+    private OgvGovernment ogv_NPA;
     @CMDBuildField(name = "TYPE_NPA_Desc")
     private String tYPE_NPA_Desc;
-    @CMDBuildField(name = "TYPE_NPA")
-    private List<NormativeType> tYPE_NPA;
+    @CMDBuildField(name = "TYPE_NPA1")
+    private NormativeType tYPE_NPA;
     private String numberNPA;
 //    private java.io.File fileAdded;
 }

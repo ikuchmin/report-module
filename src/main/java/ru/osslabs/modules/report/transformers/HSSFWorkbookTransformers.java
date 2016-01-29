@@ -123,23 +123,21 @@ public class HSSFWorkbookTransformers {
                 .addCellWithValue(String.format("%d", rowIdx.get()))
                 .addCellWithValue("Административный регламент предоставления государственной услуги")
                 .addCellWithValue(ofAll(service.getARegl())
+                    .headOption()
                     .map(npa -> String.format(RUSSIAN, "%1$s\n" +
                             "орган власти, утвердивший административный регламент: %5$s.\n" +
                             "от %2$td.%2$tm.%2$tY № %3$s\n" +
                             "%4$s",
-                        ofAll(npa.getTYPE_NPA())
-                            .headOption()
+                        Option.of(npa.getTYPE_NPA())
                             .map(NormativeType::getDescription)
                             .orElse(SPACE),
                         npa.getDateNPA(),
                         npa.getNumberNPA(),
                         npa.getNameNPA(),
-                        ofAll(npa.getOgv_NPA())
-                            .headOption()
+                        Option.of(npa.getOgv_NPA())
                             .map(OgvGovernment::getFullName)
                             .orElse(SPACE)))
                     .filter(v -> !(v.trim().isEmpty()))
-                    .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                     .orElse(NO));
             //6
             Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
