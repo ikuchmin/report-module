@@ -133,7 +133,8 @@ public class SubServices {
     private List<ApplicantsCircleSubservice> fillDetailsApplicant;
     @CMDBuildField(name = "FillProcessSubservice")
     private List<ProcessesSubservices> fillProcessSubservice;
-
+    private String comm;
+    private String commen;
 //    private Boolean startDetailsApplicant;
 //    private Boolean startDocSubservice;
 //    private Boolean startResultSubservice;

@@ -19,6 +19,7 @@ public class Payment {
     private String kbk_MFC;
     private String kbk_OGV;
     private String pointForPayment;
+    private String message;
 //    private String payment_npa_type;
 //    private String payment_ogv_npa;
 //    private String payment_date_npa;

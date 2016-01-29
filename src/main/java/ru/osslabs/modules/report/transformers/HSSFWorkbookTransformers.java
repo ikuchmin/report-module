@@ -206,11 +206,11 @@ public class HSSFWorkbookTransformers {
                             .orElse(NO))
                         //3
                         .addCellWithValue(Option.of(ss.getPeriodsubservice())
-                            .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice().getValue()))
+                            .map((val) -> String.format(RUSSIAN, "%d %s (%s)", val, ss.getFormPeriodSubservice().getValue(), ss.getComm()))
                             .orElse(NO))
                         //4
                         .addCellWithValue(Option.of(ss.getPeriodSubservice_ExTerr())
-                            .map((val) -> String.format(RUSSIAN, "%d %s", val, ss.getFormPeriodSubservice_ExTer().getValue()))
+                            .map((val) -> String.format(RUSSIAN, "%d %s (%s)", val, ss.getFormPeriodSubservice_ExTer().getValue(), ss.getCommen()))
                             .orElse(NO))
                         //5
                         .addCellWithValue(ofAll(ss.getReject_noRecept())
@@ -254,16 +254,18 @@ public class HSSFWorkbookTransformers {
                             String cellText = ofAll(period, units)
                                 .filter(v -> !v.isEmpty())
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningWithSpace)
-                                .orElse(NO);
+                                .orElse(HYPHEN);
 
                             return cellText;
                         })
                         //9
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2())
                             .map((p) ->
-                                String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб.",
+                                String.format(RUSSIAN, "%s. Размер государственной пошлины или иной платы: %d руб. (%s)",
                                     p.getDescription(),
-                                    p.getSizepayment()))
+                                    p.getSizepayment(),
+                                    p.getMessage())
+                            )
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
@@ -271,18 +273,16 @@ public class HSSFWorkbookTransformers {
                         .addCellWithValue(ofAll(ss.getSubservice_Payment2()) // 7.2
                             .flatMap(p -> ofAll(p.getPayment_npa())
                                 .map((npa) -> String.format(RUSSIAN,
-                                    "%1$s от %2$td.%2$tm.%2$tY № %3$s %4$s орган власти, утвердивший административный регламент: %5$s. Пункт: %6$s",
-                                    ofAll(npa.getTYPE_NPA())
-                                        .headOption()
+                                    "%1$s орган власти, утвердивший административный регламент: %2$s от %3$td.%3$tm.%3$tY № %4$s\n%5$s.\nПункт: %6$s",
+                                    Option.of(npa.getTYPE_NPA())
                                         .map(NormativeType::getDescription)
+                                        .orElse(SPACE),
+                                    Option.of(npa.getOgv_NPA())
+                                        .map(OgvGovernment::getFullName)
                                         .orElse(SPACE),
                                     npa.getDateNPA(),
                                     npa.getNumberNPA(),
                                     npa.getNameNPA(),
-                                    ofAll(npa.getOgv_NPA())
-                                        .headOption()
-                                        .map(OgvGovernment::getFullName)
-                                        .orElse(SPACE),
                                     p.getPointForPayment())))
                             .toSet()
                             .map("- "::concat)
@@ -315,7 +315,7 @@ public class HSSFWorkbookTransformers {
                             .toSet()
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                            .orElse(HYPHEN))
+                            .orElse(NO))
                         //13
                         .addCellWithValue(ofAll(
                             ofAll(ss.getTerrOrgOnPaper(),
@@ -338,7 +338,7 @@ public class HSSFWorkbookTransformers {
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
                             .flatMap(Function.identity())
                             .map("- "::concat)
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(HYPHEN))
+                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO))
                         //14
                         .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
                         //15
