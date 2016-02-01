@@ -414,7 +414,6 @@ public class HSSFWorkbookTransformers {
                         }
                         applicantToDocMap.put(applicant, list);
                     }
-                    applicantToDocMap.size();
                     //мапим заявителя на список документов представителя заявителя
                     Map<ApplicantsCircleSubservice, List<DescriptionDocumentsObslugi>> applicantToRepresDocMap = new HashMap<>();
                     for (ApplicantsCircleSubservice applicant : applicantList) {
@@ -428,7 +427,6 @@ public class HSSFWorkbookTransformers {
                         }
                         applicantToRepresDocMap.put(applicant, list);
                     }
-                    applicantToRepresDocMap.size();
 
                     for (ApplicantsCircleSubservice applicantDesc : applicantList) {
                         List<DescriptionDocumentsObslugi> applicantDocList = applicantToDocMap.get(applicantDesc);
@@ -469,8 +467,14 @@ public class HSSFWorkbookTransformers {
                                 //14
                                 .addCellWithValue(
                                     Option.of(applicantDesc.getPossibilityApplication())
-                                        .map(Lookup::getValue)
-                                        .orElse("Отсутствует")
+                                        .map(v->{
+                                            if (v.getValue().toLowerCase().equals("имеется")) {
+                                                return "Имеется";
+                                            } else {
+                                                return HYPHEN;
+                                            }
+                                        })
+                                        .orElse(HYPHEN)
                                 )
                                 //15
                                 .addCellWithValue(
@@ -562,8 +566,14 @@ public class HSSFWorkbookTransformers {
                                     //14
                                     .addCellWithValue(
                                         Option.of(applicantDesc.getPossibilityApplication())
-                                            .map(Lookup::getValue)
-                                            .orElse("Отсутствует")
+                                            .map(v->{
+                                                if (v.getValue().toLowerCase().equals("имеется")) {
+                                                    return "Имеется";
+                                                } else {
+                                                    return HYPHEN;
+                                                }
+                                            })
+                                            .orElse(HYPHEN)
                                     )
                                     //15
                                     .addCellWithValue(
