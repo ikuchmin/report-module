@@ -311,14 +311,15 @@ public class HSSFWorkbookTransformers {
                                 .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), ss.getAdressOffSite())),
                             ofAll(ss.getAppealSubServices()).map(SebserviceAppeal::getDescription)
                                 .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                            .flatMap(Function.identity())
+                            .flatMap(ignored -> ignored)
+                            .toSet()
                             .map("- "::concat)
                             .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
                             .orElse(NO))
                         //13
                         .addCellWithValue(ofAll(
-                            ofAll(ss.getAuthorityPaper(),
-                                ss.getTerrOrgOnPaper(),
+                            ofAll(ss.getTerrOrgOnPaper(),
+                                ss.getAuthorityPaper(),
                                 ss.getInMFConPaperFrom(),
                                 ss.getInMFCinDocFromITOrg(),
                                 ss.getFromCabinetGosUslug(),
