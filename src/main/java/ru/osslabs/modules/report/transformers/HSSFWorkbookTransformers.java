@@ -10,6 +10,7 @@ import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.*;
+import ru.osslabs.modules.report.isui.domain.Incident;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -93,95 +94,6 @@ public class HSSFWorkbookTransformers {
         AtomicInteger rowIdx = new AtomicInteger(0);
         if (serviceOption.isDefined()) {
             Service service = serviceOption.get();
-            //1
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Наименование органа, предоставляющего услугу")
-                .addCellWithValue(String.format("%s",
-                    ofAll(service.getRefOrgGovemment())
-                        .headOption()
-                        .map(RefOrgGovemment::getFullname)
-                        .orElse(NO)))
-                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)));
-            //2
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Номер услуги в федеральном реестре")
-                .addCellWithValue(Option.of(service.getFederalNumberOfService()).orElse(NO));
-            //3
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Полное наименование услуги")
-                .addCellWithValue(Option.of(service.getDescription()).orElse(NO));
-            //4
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Краткое наименование услуги")
-                .addCellWithValue(Option.of(service.getNameService()).orElse(NO));
-            //5
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Административный регламент предоставления государственной услуги")
-                .addCellWithValue(ofAll(service.getARegl())
-                    .headOption()
-                    .map(npa -> String.format(RUSSIAN, "%1$s\n" +
-                            "орган власти, утвердивший административный регламент: %5$s.\n" +
-                            "от %2$td.%2$tm.%2$tY № %3$s\n" +
-                            "%4$s",
-                        Option.of(npa.getTYPE_NPA())
-                            .map(NormativeType::getDescription)
-                            .orElse(SPACE),
-                        npa.getDateNPA(),
-                        npa.getNumberNPA(),
-                        npa.getNameNPA(),
-                        Option.of(npa.getOgv_NPA())
-                            .map(OgvGovernment::getFullName)
-                            .orElse(SPACE)))
-                    .filter(v -> !(v.trim().isEmpty()))
-                    .orElse(NO));
-            //6
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Перечень «подуслуг»")
-                .addCellWithValue(() -> {
-                    Lookup<String> haveSubServices = service.getHavesubservices();
-                    if (haveSubServices == null) {
-                        return NO;
-                    }
-                    if (haveSubServices.getValue().equals("Да")) {
-                        AtomicInteger index = new AtomicInteger();
-                        return ofAll(service.getSubServices())
-                            .filter(Objects::nonNull)
-                            .map(SubServices::getDescription)
-                            .map(v -> String.format("%d. %s", index.incrementAndGet(), v))
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine)
-                            .orElse(NO);
-                    } else {
-                        return NO;
-                    }
-                });
-            //7
-            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
-                .addCellWithValue(String.format("%d", rowIdx.get()))
-                .addCellWithValue("Способы оценки качества предоставления государственной услуги")
-                .addCellWithValue(() -> {
-                    AtomicInteger index = new AtomicInteger();
-                    return ofAll(
-                        ofAll(service.getRadiotelephone(),
-                            service.getTerminal(),
-                            service.getPortalPublicServices(),
-                            service.getSiteVashControl())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined()) // Replace true on false
-                            .map(CMDField::getDescription),
-                        Option.of(service.getOfficialSite())
-                            .filter(cm -> cm.getValue().filter(v -> v.equals(true)).isDefined())
-                            .map(cm -> String.format(RUSSIAN, "%s %s", cm.getDescription(), service.getWebsiteAddress())),
-                        ofAll(service.getRefQualityRating()).map(RefQualityRating::getDescription)
-                            .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine))
-                        .flatMap(Function.identity())
-                        .map(v -> String.format("%d. %s", index.incrementAndGet(), v))
-                        .reduceLeftOption(HSSFWorkbookTransformers::joiningNewLine).orElse(NO);
-                });
         }
         return workbook;
     }
@@ -466,7 +378,7 @@ public class HSSFWorkbookTransformers {
                                 //14
                                 .addCellWithValue(
                                     Option.of(applicantDesc.getPossibilityApplication())
-                                        .map(v->{
+                                        .map(v -> {
                                             if (v.getValue().toLowerCase().equals("имеется")) {
                                                 return "Имеется";
                                             } else {
@@ -565,7 +477,7 @@ public class HSSFWorkbookTransformers {
                                     //14
                                     .addCellWithValue(
                                         Option.of(applicantDesc.getPossibilityApplication())
-                                            .map(v->{
+                                            .map(v -> {
                                                 if (v.getValue().toLowerCase().equals("имеется")) {
                                                     return "Имеется";
                                                 } else {
@@ -1298,6 +1210,174 @@ public class HSSFWorkbookTransformers {
                         //11
                         .addCellWithValue(String.format("%d", rowIdx.get()))
                 );
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromOptionIncidentToReportMessage(Re report, Option<Incident> incidentOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (incidentOption.isDefined()) {
+            Incident incident = incidentOption.get();
+            //1
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("1")
+                .addCellWithValue("ОСТ")
+                .addCellWithValue(Option.of(incident.getOst()).orElse(HYPHEN));
+            //2
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("2")
+                .addCellWithValue("РНУ")
+                .addCellWithValue(Option.of(incident.getRnu()).orElse(HYPHEN));
+            //3
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("3")
+                .addCellWithValue("Нефтепровод (наименование, километр, диаметр, max разрешенное давление " +
+                    "и давление на момент отказа/аварии/инцидента, год ввода МН,  в эксплуатацию, " +
+                    "толщина стенки, марка стали)")
+                .addCellWithValue(Option.of(incident.getPipeline()).orElse(HYPHEN));
+            //4
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("4")
+                .addCellWithValue("Технологический участок, диаметр")
+                .addCellWithValue(Option.of(incident.getTu()).orElse(HYPHEN));
+            //5
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("5")
+                .addCellWithValue("Местоположение (республика, край, область, район, населенный пункт, " +
+                    "ближайший водный объект, авто- и ж/д дороги)")
+                .addCellWithValue(Option.of(incident.getLocationEvent()).orElse(HYPHEN));
+            //6
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("6")
+                .addCellWithValue("Дата и время отказа, повреждения запорной арматуры")
+                .addCellWithValue(
+                    Option.of(incident.getEventTimeDate())
+                        .map(v -> String.format(RUSSIAN, "%1$td.%1$tm.%1$tY %1$TR", v))
+                        .orElse(HYPHEN)
+                );
+            //7
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("7")
+                .addCellWithValue("Тип запорной арматуры DN, РN, технологический номер, завод изготовитель")
+                .addCellWithValue(Option.of(incident.getValves()).orElse(HYPHEN));
+            //8
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("8")
+                .addCellWithValue("Дата изготовления запорной арматуры, дата ввода в эксплуатацию, " +
+                    "дата капитального ремонта")
+                .addCellWithValue(String.format("Дата изготовления - %1s\n" +
+                        "Дата ввода в эксплуатацию - %2s\n" +
+                        "Дата капитального ремонта - %3s",
+                    Option.of(incident.getValvesCreate())
+                        .map(v -> String.format("%1$td.%1$tm.%1$tY", v))
+                        .orElse("нет данных"),
+                    Option.of(incident.getValvesStart())
+                        .map(v -> String.format("%1$td.%1$tm.%1$tY", v))
+                        .orElse("нет данных"),
+                    Option.of(incident.getValvesKapRem())
+                        .map(v -> String.format("%1$td.%1$tm.%1$tY", v))
+                        .orElse("нет данных")
+                ));
+            //9
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("9")
+                .addCellWithValue("Дата проведения последнего ТО, ТР, СР, диагностического обследования. " +
+                    "Результат обследования: (продлён/не продлён срок службы до (даты), " +
+                    "выявленные/устранённые дефекты)")
+                .addCellWithValue(Option.of(incident.getLastTO()).orElse(HYPHEN));
+            //10
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("10")
+                .addCellWithValue("Дата проведения проверки запорной арматуры на полное открытие-закрытие, " +
+                    "наличие соответствующего акта")
+                .addCellWithValue(Option.of(incident.getLastCheck()).orElse(HYPHEN));
+            //11
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("11")
+                .addCellWithValue("Марка электропривода")
+                .addCellWithValue(Option.of(incident.getDriverBrand()).orElse(HYPHEN));
+            //12
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("12")
+                .addCellWithValue("Причины отказа, повреждения запорной арматуры")
+                .addCellWithValue(Option.of(incident.getIncReason()).orElse(HYPHEN));
+            //13
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("13")
+                .addCellWithValue("Ближайшие НПС, какими задвижками (номер, километр) и во сколько отсечен участок")
+                .addCellWithValue(Option.of(incident.getNearNPS()).orElse(HYPHEN));
+            //14
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("14")
+                .addCellWithValue("Источник обнаружения:");
+            //14.1
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("14.1")
+                .addCellWithValue("Обслуживающий персонал, служба безопасности")
+                .addCellWithValue(Option.of(incident.getEmployee()).orElse(HYPHEN));
+            //14.2
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("14.2")
+                .addCellWithValue("Данные СДКУ (ЕСУ) по снижению давления\n" +
+                    "с __ кгс/см2  до ___ кгс/см2 \n" +
+                    "(на ___ кгс/см2 от расчетного значения)")
+                .addCellWithValue(Option.of(incident.getSdku()).orElse(HYPHEN));
+            //14.3
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("14.3")
+                .addCellWithValue("Стороннее лицо (Ф.И.О. тел.)")
+                .addCellWithValue(Option.of(incident.getOtherPerson()).orElse(HYPHEN));
+            //15
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("15")
+                .addCellWithValue("Дата и время выезда патрульной группы, " +
+                    "продолжительность обследования (нормативное)")
+                .addCellWithValue(Option.of(incident.getReactionTime()).orElse(HYPHEN));
+            //17
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("17")
+                .addCellWithValue("Фактические дата и время обнаружения (аварии/инцидента/ отказа) патрульной группой, " +
+                    "продолжительность обследования фактическая " +
+                    "(при увеличении времени обследования от нормативного указать причины)")
+                .addCellWithValue(Option.of(incident.getReactionTimeFact()).orElse(HYPHEN));
+            //18
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("18")
+                .addCellWithValue("Время простоя, сокращения перекачки")
+                .addCellWithValue(Option.of(incident.getDown()).orElse(HYPHEN));
+            //19
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("19")
+                .addCellWithValue("Снижение объемов перекачки нефти")
+                .addCellWithValue(Option.of(incident.getDownValue()).orElse(HYPHEN));
+            //20
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("20")
+                .addCellWithValue("Планируемые способ и сроки устранения отказа, повреждения")
+                .addCellWithValue(Option.of(incident.getPlanRepair()).orElse(HYPHEN));
+            //21
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("21")
+                .addCellWithValue("Ф.И.О. лица, возглавляющего работы по ликвидации отказа, " +
+                    "повреждения, должность, контактный телефон")
+                .addCellWithValue(Option.of(incident.getLikvidator()).orElse(HYPHEN));
+            //22
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("22")
+                .addCellWithValue("Состав и количество технических средств и персонала, " +
+                    "находящихся на месте и направленных к месту отказа, повреждения " +
+                    "(указать откуда вышли бригады и расстояние до места аварии/отказа/инцидента, " +
+                    "время выхода и прибытия на место)")
+                .addCellWithValue(Option.of(incident.getSostav()).orElse(HYPHEN));
+            //23
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue("23")
+                .addCellWithValue("Дата и время извещения филиала ОАО «Связьтранснефть» об отказе, " +
+                    "повреждении линейной запорной арматуры")
+                .addCellWithValue(Option.of(incident.getSvyazTNT()).orElse(HYPHEN));
         }
         return workbook;
     }
