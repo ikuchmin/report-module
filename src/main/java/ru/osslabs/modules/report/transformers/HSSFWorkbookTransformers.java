@@ -10,7 +10,7 @@ import org.apache.poi.hssf.util.CellReference;
 import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.*;
-import ru.osslabs.modules.report.isui.domain.Incident;
+import ru.osslabs.modules.report.isui.domain.*;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -1378,6 +1378,44 @@ public class HSSFWorkbookTransformers {
                 .addCellWithValue("Дата и время извещения филиала ОАО «Связьтранснефть» об отказе, " +
                     "повреждении линейной запорной арматуры")
                 .addCellWithValue(Option.of(incident.getSvyazTNT()).orElse(HYPHEN));
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromOptionIncidentToReportPlan(Re report, Option<Incident> incidentOption) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (incidentOption.isDefined()) {
+            Incident incident = incidentOption.get();
+            List<Working> workingList = incident.getWorking();
+            if (workingList == null || workingList.isEmpty()) {
+                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    .addCellWithValue(SPACE)
+                    .addCellWithValue("нет данных")
+                    .addCellWithValue(SPACE)
+                    .addCellWithValue(SPACE)
+                    .addCellWithValue(SPACE);
+            } else {
+                ofAll(workingList).forEach(working ->
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        //1
+                        .addCellWithValue(String.format("%d", rowIdx.get()))
+                        //2
+                        .addCellWithValue(Option.of(working.getFullDescription()).orElse(HYPHEN))
+                        //3
+                        .addCellWithValue(Option.of(working.getControlDate())
+                            .map(v -> String.format("%1$td.%1$tm.%1$tY %1$TR", v))
+                            .orElse(HYPHEN))
+                        //4
+                        .addCellWithValue(Option.of(working.getIspolnitel()).orElse(HYPHEN))
+                        //5 empty
+                        .addCellWithValue(SPACE)
+                        //6
+                        .addCellWithValue(Option.of(incident.getOst()).orElse(SPACE))
+                );
+            }
         }
         return workbook;
     }

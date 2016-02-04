@@ -3,7 +3,7 @@ package ru.osslabs.modules.report.isui.domain;
 import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
 
-import java.util.Date;
+import java.util.*;
 
 /**
  * Created by Serge Kozyrev on 02.02.16.
@@ -62,4 +62,6 @@ public class Incident {
     private String svyazTNT;
     @CMDBuildField(name = "EventTimeDate")
     private Date eventTimeDate;
+    @CMDBuildField(name = "Working")
+    private List<Working> working;
 }
