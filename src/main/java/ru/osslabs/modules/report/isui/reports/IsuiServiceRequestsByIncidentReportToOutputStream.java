@@ -17,8 +17,8 @@ import java.util.function.Function;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class IsuiIncidentByStatusReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
-    private final String PATH_TO_REPORT = "/reports/juniprint/isui/isui_report_incidentByStatus.xlt";
+public class IsuiServiceRequestsByIncidentReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
+    private final String PATH_TO_REPORT = "/reports/juniprint/isui/isui_report_serviceRequestsByIncident.xlt";
     @Inject
     private Fetcher<ServiceIdReport, List<Incident>> isuiDataFetcher;
 
@@ -51,7 +51,7 @@ public class IsuiIncidentByStatusReportToOutputStream<T extends SourceFututeHSSF
     public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
                 .compose(isuiDataFetcher)
-                .transform(HSSFWorkbookTransformers::fromIncidentListToReportIncidentByStatus)
+                .transform(HSSFWorkbookTransformers::fromIncidentListToReportServiceRequestsByIncident)
                 .compile(JUniPrintEngine::compile)
                 .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
     }

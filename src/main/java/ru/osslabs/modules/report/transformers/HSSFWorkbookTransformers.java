@@ -1420,7 +1420,7 @@ public class HSSFWorkbookTransformers {
         return workbook;
     }
 
-    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromOptionIncidentToReportIncidentByStatus(Re report, List<Incident> incidents) {
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromIncidentListToReportIncidentByStatus(Re report, List<Incident> incidents) {
         HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
         CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
         HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
@@ -1503,6 +1503,67 @@ public class HSSFWorkbookTransformers {
                         //15
                         .addCellWithValue(status)
                 )
+            );
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromIncidentListToReportServiceRequestsByIncident(Re report, List<Incident> incidents) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (incidents == null || incidents.isEmpty()) {
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(SPACE) //1
+                .addCellWithValue(NO_DATA) //2
+                .addCellWithValue(SPACE) //3
+                .addCellWithValue(SPACE) //4
+                .addCellWithValue(SPACE) //5
+                .addCellWithValue(SPACE) //6
+                .addCellWithValue(SPACE) //7
+                .addCellWithValue(SPACE) //8
+                //9
+                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow"))
+                    .format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                .addCellWithValue(SPACE);//10
+        } else {
+            ofAll(incidents).forEach(incident ->
+                ofAll(incident.getInicialIncidents())
+                    .filter(Objects::nonNull)
+                    .forEach(serviceRequest ->
+                        Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                            //1
+                            .addCellWithValue(Option.of(serviceRequest.getCode()).orElse(HYPHEN))
+                            //2
+                            .addCellWithValue(Option.of(serviceRequest.getDescription()).orElse(HYPHEN))
+                            //3
+                            .addCellWithValue(
+                                Option.of(serviceRequest.getUrgency())
+                                    .map(Urgency::getDescription)
+                                    .orElse(HYPHEN))
+                            //4
+                            .addCellWithValue(
+                                Option.of(serviceRequest.getImpactSelect())
+                                    .map(ImpactSelect::getDescription)
+                                    .orElse(HYPHEN))
+                            //5
+                            .addCellWithValue(
+                                Option.of(serviceRequest.getSouceIncome())
+                                    .map(SouceIncome::getDescription)
+                                    .orElse(HYPHEN))
+                            //6
+                            .addCellWithValue(Option.of(serviceRequest.getOst()).orElse(HYPHEN))
+                            //7
+                            .addCellWithValue(Option.of(serviceRequest.getTu()).orElse(HYPHEN))
+                            //8
+                            .addCellWithValue(Option.of(serviceRequest.getLinePart_NPS()).orElse(HYPHEN))
+                            //9
+                            .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow"))
+                                .format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                            //10
+                            .addCellWithValue(incident.getCode())
+                    )
             );
         }
         return workbook;

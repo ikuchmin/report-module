@@ -80,4 +80,6 @@ public class Incident {
     private Lookup<String> severityIntident;
     @CMDBuildField(name = "IncStatus")
     private String incStatus;
+    @CMDBuildField(name = "InicialIncidents")
+    private List<ServiceRequest> inicialIncidents;
 }
