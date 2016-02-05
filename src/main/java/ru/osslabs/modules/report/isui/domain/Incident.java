@@ -2,6 +2,7 @@ package ru.osslabs.modules.report.isui.domain;
 
 import lombok.Data;
 import ru.osslabs.modules.report.CMDBuildField;
+import ru.osslabs.modules.report.domain.Lookup;
 
 import java.util.*;
 
@@ -10,6 +11,10 @@ import java.util.*;
  */
 @Data
 public class Incident {
+    @CMDBuildField(name = "Code")
+    private String code;
+    @CMDBuildField(name = "Description")
+    private String description;
     @CMDBuildField(name = "OST")
     private String ost;
     @CMDBuildField(name = "RNU")
@@ -64,4 +69,15 @@ public class Incident {
     private Date eventTimeDate;
     @CMDBuildField(name = "Working")
     private List<Working> working;
+    private Date datePerformance;
+    @CMDBuildField(name = "IncType")
+    private Lookup<String> incType;
+    @CMDBuildField(name = "UrgencyStr")
+    private String urgencyStr;
+    @CMDBuildField(name = "KlassIntident2")
+    private Lookup<String> klassIntident;
+    @CMDBuildField(name = "SeverityIntident")
+    private Lookup<String> severityIntident;
+    @CMDBuildField(name = "IncStatus")
+    private String incStatus;
 }

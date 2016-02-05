@@ -1420,6 +1420,94 @@ public class HSSFWorkbookTransformers {
         return workbook;
     }
 
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromOptionIncidentToReportIncidentByStatus(Re report, List<Incident> incidents) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        if (incidents == null || incidents.isEmpty()) {
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(SPACE) //1
+                .addCellWithValue(SPACE) //2
+                .addCellWithValue(NO_DATA) //3
+                .addCellWithValue(SPACE) //4
+                .addCellWithValue(SPACE) //5
+                .addCellWithValue(SPACE) //6
+                .addCellWithValue(SPACE) //7
+                .addCellWithValue(SPACE) //8
+                .addCellWithValue(SPACE) //9
+                .addCellWithValue(SPACE) //10
+                .addCellWithValue(SPACE) //11
+                .addCellWithValue(SPACE) //12
+                .addCellWithValue(SPACE) //13
+                //14
+                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow")).format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                .addCellWithValue(SPACE) //15
+            ;
+
+        } else {
+            Map<String, List<Incident>> incidentByStatus = new HashMap<>();
+            for (Incident incident : incidents) {
+                String status = incident.getIncStatus();
+                if (status == null || status.isEmpty()) {
+                    status = "Без статуса";
+                }
+                List<Incident> list = incidentByStatus.get(status);
+                if (list == null) {
+                    list = new ArrayList<>();
+                }
+                list.add(incident);
+                incidentByStatus.put(status, list);
+            }
+            incidentByStatus.forEach((status, list) ->
+                ofAll(list).forEach(incident ->
+                    Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                        .addCellWithValue(SPACE) //1
+                        //2
+                        .addCellWithValue(Option.of(incident.getCode()).orElse(HYPHEN))
+                        //3
+                        .addCellWithValue(Option.of(incident.getDescription()).orElse(HYPHEN))
+                        .addCellWithValue(Option.of(incident.getIncReason()).orElse(HYPHEN)) //4
+                        //5
+                        .addCellWithValue(Option.of(incident.getEventTimeDate())
+                            .map(v -> String.format(RUSSIAN, "%1$td.%1$tm.%1$tY %1$TR", v))
+                            .orElse(HYPHEN))
+                        //6
+                        .addCellWithValue(Option.of(incident.getDatePerformance())
+                            .map(v -> String.format(RUSSIAN, "%1$td.%1$tm.%1$tY %1$TR", v))
+                            .orElse(HYPHEN)
+                        )
+                        //7
+                        .addCellWithValue(Option.of(incident.getIncType())
+                            .map(Lookup::getValue)
+                            .orElse(HYPHEN))
+                        //8
+                        .addCellWithValue(Option.of(incident.getUrgencyStr()).orElse(HYPHEN))
+                        //9
+                        .addCellWithValue(Option.of(incident.getKlassIntident())
+                            .map(Lookup::getValue)
+                            .orElse(HYPHEN))
+                        //10
+                        .addCellWithValue(Option.of(incident.getKlassIntident())
+                            .map(Lookup::getValue)
+                            .orElse(HYPHEN))
+                        //11
+                        .addCellWithValue(Option.of(incident.getOst()).orElse(HYPHEN))
+                        //12
+                        .addCellWithValue(Option.of(incident.getRnu()).orElse(HYPHEN))
+                        //13
+                        .addCellWithValue(Option.of(incident.getTu()).orElse(HYPHEN))
+                        //14
+                        .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow"))
+                            .format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                        //15
+                        .addCellWithValue(status)
+                )
+            );
+        }
+        return workbook;
+    }
+
     public static String joiningNewLine(String acc, String ps) {
         return acc.concat("\n").concat(ps);
     }
