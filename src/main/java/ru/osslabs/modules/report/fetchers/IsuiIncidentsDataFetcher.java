@@ -4,7 +4,7 @@ import ru.osslabs.model.datasource.*;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.isui.domain.Incident;
 import ru.osslabs.modules.report.reflections.*;
-import ru.osslabs.modules.report.spu.ServiceIdReport;
+import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class IsuiIncidentsDataFetcher implements Fetcher<ServiceIdReport, List<Incident>> {
+public class IsuiIncidentsDataFetcher implements Fetcher<Report, List<Incident>> {
 
     @Inject
     private Logger log;
@@ -23,8 +23,7 @@ public class IsuiIncidentsDataFetcher implements Fetcher<ServiceIdReport, List<I
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Incident> compose(ServiceIdReport report) {
-        String serviceId = report.getServiceId();
+    public List<Incident> compose(Report report) {
         List<DataObject> dataObjects = dataSource.getObjectList("Incidents", null);
         List<Incident> incidents = new ArrayList<>();
         dataObjects.stream()

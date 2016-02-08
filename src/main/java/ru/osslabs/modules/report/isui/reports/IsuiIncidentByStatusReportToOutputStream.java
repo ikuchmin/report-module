@@ -6,8 +6,8 @@ import ru.osslabs.modules.report.engines.JUniPrintEngine;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.isui.domain.Incident;
 import ru.osslabs.modules.report.publishers.HSSFWorkBookFileStorePublisher;
-import ru.osslabs.modules.report.spu.ServiceIdReport;
 import ru.osslabs.modules.report.transformers.HSSFWorkbookTransformers;
+import ru.osslabs.modules.report.types.Report;
 
 import javax.inject.Inject;
 import java.nio.file.*;
@@ -17,10 +17,10 @@ import java.util.function.Function;
 /**
  * Created by ikuchmin on 18.11.15.
  */
-public class IsuiIncidentByStatusReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & ServiceIdReport> implements ReportFactory<T, Void> {
+public class IsuiIncidentByStatusReportToOutputStream<T extends SourceFututeHSSFWorkBookReport & DestinationOutputStreamReport & Report> implements ReportFactory<T, Void> {
     private final String PATH_TO_REPORT = "/reports/juniprint/isui/isui_report_incidentByStatus.xlt";
     @Inject
-    private Fetcher<ServiceIdReport, List<Incident>> isuiDataFetcher;
+    private Fetcher<Report, List<Incident>> isuiIncidentsDataFetcher;
 
     @Override
     public String getReportCode() {
@@ -50,7 +50,7 @@ public class IsuiIncidentByStatusReportToOutputStream<T extends SourceFututeHSSF
     @Override
     public Function<T, Void> getRunner() {
         return (r) -> new ReportBuilder<>(r)
-                .compose(isuiDataFetcher)
+                .compose(isuiIncidentsDataFetcher)
                 .transform(HSSFWorkbookTransformers::fromIncidentListToReportIncidentByStatus)
                 .compile(JUniPrintEngine::compile)
                 .publish(HSSFWorkBookFileStorePublisher::writeToOutputStream);
