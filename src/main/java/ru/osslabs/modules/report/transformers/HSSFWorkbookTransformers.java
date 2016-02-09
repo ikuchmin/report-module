@@ -11,6 +11,7 @@ import ru.osslabs.modules.report.Matrix;
 import ru.osslabs.modules.report.decorators.SourceFututeHSSFWorkBookReport;
 import ru.osslabs.modules.report.domain.*;
 import ru.osslabs.modules.report.isui.domain.*;
+import ru.osslabs.modules.report.prc.domain.Direction;
 import ru.osslabs.modules.report.spu.domain.*;
 
 import java.time.ZoneId;
@@ -1564,6 +1565,63 @@ public class HSSFWorkbookTransformers {
                             //10
                             .addCellWithValue(incident.getCode())
                     )
+            );
+        }
+        return workbook;
+    }
+
+    public static <Re extends SourceFututeHSSFWorkBookReport> HSSFWorkbook fromDirectionListToReportExpiredDirections(Re report, List<Direction> directions) {
+        HSSFWorkbook workbook = report.getHSSFWorkbookFuture().get();
+        CellReference ref = new CellReference(workbook.getName(report.getDataBagCellName()).getRefersToFormula());
+        HSSFSheet sheet = workbook.getSheet(ref.getSheetName());
+        AtomicInteger rowIdx = new AtomicInteger(0);
+        List<Direction> expiredDirections = ofAll(directions)
+            .filter(direction ->
+                direction.getRemind().before(new Date()) &&
+                    !direction.getStatusCode().equals("realized"))
+            .toJavaList();
+        if (expiredDirections == null || expiredDirections.isEmpty()) {
+            final int EMPTY_LIST = 0;
+            Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                .addCellWithValue(SPACE) //1
+                .addCellWithValue("Нет поручений") //2
+                .addCellWithValue(SPACE) //3
+                .addCellWithValue(SPACE) //4
+                .addCellWithValue(SPACE) //5
+                .addCellWithValue(SPACE) //6
+                .addCellWithValue(SPACE) //7
+                .addCellWithValue(SPACE) //8
+                //9
+                .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow"))
+                    .format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                //10
+                .addCellWithValue(String.format("%d", EMPTY_LIST));
+        } else {
+            ofAll(expiredDirections).forEach(direction ->
+                Row.of(objectNotNull(rowIdx.getAndIncrement() + ref.getRow(), sheet::getRow, sheet::createRow), ref.getCol())
+                    //1
+                    .addCellWithValue(String.format("%d", rowIdx.get()))
+                    //2
+                    .addCellWithValue(Option.of(direction.getDescription()).orElse(NO))
+                    //3
+                    .addCellWithValue(Option.of(direction.getRegTime()).orElse(NO))
+                    //4
+                    .addCellWithValue(Option.of(direction.getRemind())
+                        .map(v -> String.format(RUSSIAN, "%1$td.%1$tm.%1$tY %1$TR", v))
+                        .orElse(NO))
+                    //5
+                    .addCellWithValue(Option.of(direction.getIspolnitel()).orElse(NO))
+                    //6
+                    .addCellWithValue(Option.of(direction.getNumber()).orElse(NO))
+                    //7
+                    .addCellWithValue(Option.of(direction.getName()).orElse(NO))
+                    //8
+                    .addCellWithValue(Option.of(direction.getDocumentType()).orElse(NO))
+                    //9
+                    .addCellWithValue(ZonedDateTime.now(ZoneId.of("Europe/Moscow"))
+                        .format(DateTimeFormatter.ofPattern("dd.MM.uuuu", RUSSIAN)))
+                    //10
+                    .addCellWithValue(String.format("%d", expiredDirections.size()))
             );
         }
         return workbook;
