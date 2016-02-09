@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.fetchers;
+package ru.osslabs.modules.report.fetchers.isui;
 
 import javaslang.control.*;
 import ru.osslabs.model.datasource.ExternalDataSource;

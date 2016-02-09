@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.fetchers;
+package ru.osslabs.modules.report.fetchers.isui;
 
 import ru.osslabs.model.datasource.*;
 import ru.osslabs.modules.report.functions.Fetcher;

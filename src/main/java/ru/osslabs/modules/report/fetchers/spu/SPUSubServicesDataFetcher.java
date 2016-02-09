@@ -1,4 +1,4 @@
-package ru.osslabs.modules.report.fetchers;
+package ru.osslabs.modules.report.fetchers.spu;
 
 import javaslang.control.Try;
 import ru.osslabs.model.datasource.DataObject;

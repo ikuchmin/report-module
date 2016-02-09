@@ -1,20 +1,16 @@
-package ru.osslabs.modules.report.fetchers;
+package ru.osslabs.modules.report.fetchers.spu;
 
 import javaslang.control.Option;
 import javaslang.control.Try;
-import ru.osslabs.model.datasource.DataObject;
 import ru.osslabs.model.datasource.ExternalDataSource;
 import ru.osslabs.modules.report.functions.Fetcher;
 import ru.osslabs.modules.report.reflections.ObjectMapper;
 import ru.osslabs.modules.report.reflections.TypeReference;
 import ru.osslabs.modules.report.spu.ServiceIdReport;
 import ru.osslabs.modules.report.spu.domain.Service;
-import ru.osslabs.modules.report.spu.domain.SubServices;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Stream;
 
 /**
  * Created by ikuchmin on 18.11.15.
