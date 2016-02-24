@@ -379,6 +379,7 @@ public class HSSFWorkbookTransformers {
                                 //14
                                 .addCellWithValue(
                                     Option.of(applicantDesc.getPossibilityApplication())
+                                        .filter(v->v.getValue() != null)
                                         .map(v -> {
                                             if (v.getValue().toLowerCase().equals("имеется")) {
                                                 return "Имеется";
@@ -478,6 +479,7 @@ public class HSSFWorkbookTransformers {
                                     //14
                                     .addCellWithValue(
                                         Option.of(applicantDesc.getPossibilityApplication())
+                                            .filter(v->v.getValue() != null)
                                             .map(v -> {
                                                 if (v.getValue().toLowerCase().equals("имеется")) {
                                                     return "Имеется";
